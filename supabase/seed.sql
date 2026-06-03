@@ -22,3 +22,17 @@ values
    '24時間看護師常駐の介護付有料老人ホームです。', false,
    '医療対応充実。')
 on conflict do nothing;
+
+-- デモ用LP（CMS）
+insert into lp_pages (title, slug, target_keyword, hero_copy, target_audience, problems, status, faq)
+values (
+  '認知症の方の入居相談｜大阪',
+  'dementia-osaka',
+  '認知症 老人ホーム 大阪',
+  '認知症が進み、自宅での介護が難しくなった方へ',
+  E'認知症の診断を受けている\n徘徊・昼夜逆転がある\n介護拒否で対応が難しい',
+  E'認知症対応可の施設をご紹介\n症状に合うケア体制をご提案\nご家族の負担を軽減',
+  'published',
+  '[{"q":"認知症でも入居できますか？","a":"対応可能な施設をご紹介できます。症状をお伺いし、最適な住まいをご提案します。"}]'::jsonb
+)
+on conflict (slug) do nothing;

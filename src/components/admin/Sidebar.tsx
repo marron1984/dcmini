@@ -11,6 +11,7 @@ import {
   CalendarCheck,
   Handshake,
   Megaphone,
+  FileText,
   LogOut,
   Menu,
   X,
@@ -28,6 +29,7 @@ const NAV = [
   { href: "/admin/tours", label: "見学管理", icon: CalendarCheck },
   { href: "/admin/referrers", label: "紹介元管理", icon: Handshake },
   { href: "/admin/ads", label: "広告管理", icon: Megaphone },
+  { href: "/admin/lp", label: "LP管理", icon: FileText },
 ];
 
 export function Sidebar({ user }: { user: AppUser }) {

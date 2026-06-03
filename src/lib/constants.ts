@@ -247,3 +247,16 @@ export const MEDICAL_SUPPORT_OPTIONS = [
   "精神科通院",
   "看取り",
 ];
+
+// 22. 通知カテゴリのラベル・色
+export const NOTIFICATION_CATEGORIES: Record<
+  string,
+  { label: string; color: string }
+> = {
+  new_inquiry: { label: "新規問い合わせ", color: "bg-blue-100 text-blue-800" },
+  no_first_contact: { label: "初回連絡未対応", color: "bg-red-100 text-red-800" },
+  tour_tomorrow: { label: "見学前日", color: "bg-orange-100 text-orange-800" },
+  next_action_due: { label: "次回アクション期限", color: "bg-amber-100 text-amber-800" },
+  stalled: { label: "長期放置案件", color: "bg-slate-200 text-slate-700" },
+  reapproach: { label: "再アプローチ予定", color: "bg-purple-100 text-purple-800" },
+};

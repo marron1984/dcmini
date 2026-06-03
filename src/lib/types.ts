@@ -185,3 +185,23 @@ export interface Referrer {
   created_at: string;
   updated_at: string;
 }
+
+export interface LpFaqItem {
+  q: string;
+  a: string;
+}
+
+export interface LpPage {
+  id: string;
+  title: string;
+  slug: string;
+  target_keyword: string | null;
+  hero_copy: string | null;
+  target_audience: string | null;
+  problems: string | null;
+  body: string | null;
+  faq: LpFaqItem[];
+  status: string; // draft / published
+  created_at: string;
+  updated_at: string;
+}

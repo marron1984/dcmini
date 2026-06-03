@@ -7,6 +7,7 @@ import type {
   Tour,
   AppUser,
   Referrer,
+  LpPage,
 } from "@/lib/types";
 
 // 共通: クエリ失敗時は空にフォールバック（Supabase未設定でもUIが表示される）
@@ -362,5 +363,200 @@ export async function getAdReports(): Promise<AdReport[]> {
       .order("date", { ascending: false })
       .limit(500);
     return (data as AdReport[]) ?? [];
+  }, []);
+}
+
+// =============================================================
+// 第2フェーズ: ランディングページ（LP CMS）
+// =============================================================
+
+export async function getLpPages(): Promise<LpPage[]> {
+  return safe(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("lp_pages")
+      .select("*")
+      .order("updated_at", { ascending: false });
+    return (data as LpPage[]) ?? [];
+  }, []);
+}
+
+export async function getLpPage(id: string): Promise<LpPage | null> {
+  return safe(async () => {
+    const supabase = createClient();
+    const { data } = await supabase.from("lp_pages").select("*").eq("id", id).single();
+    return (data as LpPage) ?? null;
+  }, null);
+}
+
+// =============================================================
+// 22. 通知要件: 管理画面のアラート集計
+// =============================================================
+
+export type NotificationCategory =
+  | "new_inquiry"        // 新規問い合わせ（未対応）
+  | "no_first_contact"   // 初回連絡未対応
+  | "tour_tomorrow"      // 見学前日
+  | "next_action_due"    // 次回アクション期限
+  | "stalled"            // 長期放置案件
+  | "reapproach";        // 失注リスク（再アプローチ予定日到来）
+
+export interface NotificationItem {
+  id: string;
+  category: NotificationCategory;
+  title: string;
+  detail: string;
+  href: string;
+  date: string | null;
+  severity: "high" | "medium" | "info";
+}
+
+const CLOSED_STATUSES = ["moved_in", "lost"];
+
+export async function getNotifications(): Promise<NotificationItem[]> {
+  return safe(async () => {
+    const supabase = createClient();
+    const [leadsRes, toursRes, actsRes] = await Promise.all([
+      supabase
+        .from("leads")
+        .select("id, status, consultant_name, created_at, updated_at, reapproach_date, lost_reason"),
+      supabase
+        .from("tours")
+        .select("id, scheduled_at, lead:lead_id(id, consultant_name), facility:facility_id(id, name)"),
+      supabase
+        .from("lead_activities")
+        .select("id, lead_id, content, next_action_date, created_at")
+        .order("created_at", { ascending: false }),
+    ]);
+
+    const leads = (leadsRes.data as unknown as {
+      id: string; status: string; consultant_name: string;
+      created_at: string; updated_at: string;
+      reapproach_date: string | null; lost_reason: string | null;
+    }[]) ?? [];
+    const tours = (toursRes.data as unknown as {
+      id: string; scheduled_at: string | null;
+      lead: { id: string; consultant_name: string } | null;
+      facility: { id: string; name: string } | null;
+    }[]) ?? [];
+    const acts = (actsRes.data as unknown as {
+      id: string; lead_id: string; content: string;
+      next_action_date: string | null; created_at: string;
+    }[]) ?? [];
+
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const ms = (d: number) => d * 24 * 60 * 60 * 1000;
+
+    // 各案件の最終活動日時
+    const lastActivity = new Map<string, string>();
+    for (const a of acts) {
+      if (!lastActivity.has(a.lead_id)) lastActivity.set(a.lead_id, a.created_at);
+    }
+
+    const items: NotificationItem[] = [];
+
+    for (const l of leads) {
+      const created = new Date(l.created_at).getTime();
+      const age = now.getTime() - created;
+
+      // 新規問い合わせ（24時間以内・status new）
+      if (l.status === "new" && age <= ms(1)) {
+        items.push({
+          id: `new-${l.id}`,
+          category: "new_inquiry",
+          title: "新規問い合わせ",
+          detail: `${l.consultant_name} 様からの新しいご相談`,
+          href: `/admin/leads/${l.id}`,
+          date: l.created_at,
+          severity: "high",
+        });
+      }
+
+      // 初回連絡未対応（new / awaiting_contact が2日以上）
+      if (["new", "awaiting_contact"].includes(l.status) && age > ms(2)) {
+        items.push({
+          id: `nofc-${l.id}`,
+          category: "no_first_contact",
+          title: "初回連絡未対応",
+          detail: `${l.consultant_name} 様（登録から${Math.floor(age / ms(1))}日経過）`,
+          href: `/admin/leads/${l.id}`,
+          date: l.created_at,
+          severity: "high",
+        });
+      }
+
+      // 長期放置（未クローズで最終活動が14日以上前）
+      if (!CLOSED_STATUSES.includes(l.status)) {
+        const last = lastActivity.get(l.id) ?? l.created_at;
+        if (now.getTime() - new Date(last).getTime() > ms(14)) {
+          items.push({
+            id: `stale-${l.id}`,
+            category: "stalled",
+            title: "長期放置案件",
+            detail: `${l.consultant_name} 様（14日以上動きなし）`,
+            href: `/admin/leads/${l.id}`,
+            date: last,
+            severity: "medium",
+          });
+        }
+      }
+
+      // 失注リスク（再アプローチ予定日が到来）
+      if (l.status === "lost" && l.reapproach_date && l.reapproach_date <= today) {
+        items.push({
+          id: `reapp-${l.id}`,
+          category: "reapproach",
+          title: "再アプローチ予定",
+          detail: `${l.consultant_name} 様（${l.lost_reason ?? "失注"}）`,
+          href: `/admin/leads/${l.id}`,
+          date: l.reapproach_date,
+          severity: "medium",
+        });
+      }
+    }
+
+    // 見学前日（24〜48時間以内）
+    for (const t of tours) {
+      if (!t.scheduled_at) continue;
+      const diff = new Date(t.scheduled_at).getTime() - now.getTime();
+      if (diff > 0 && diff <= ms(2)) {
+        items.push({
+          id: `tour-${t.id}`,
+          category: "tour_tomorrow",
+          title: "まもなく見学",
+          detail: `${t.lead?.consultant_name ?? "—"} 様 / ${t.facility?.name ?? "施設未定"}`,
+          href: t.lead ? `/admin/leads/${t.lead.id}` : "/admin/tours",
+          date: t.scheduled_at,
+          severity: "high",
+        });
+      }
+    }
+
+    // 次回アクション期限（期日が今日以前・案件が未クローズ）
+    const leadStatus = new Map(leads.map((l) => [l.id, l.status]));
+    const seenAction = new Set<string>();
+    for (const a of acts) {
+      if (!a.next_action_date || a.next_action_date > today) continue;
+      if (seenAction.has(a.lead_id)) continue; // 案件ごとに最新1件
+      const st = leadStatus.get(a.lead_id);
+      if (!st || CLOSED_STATUSES.includes(st)) continue;
+      seenAction.add(a.lead_id);
+      const lead = leads.find((l) => l.id === a.lead_id);
+      items.push({
+        id: `act-${a.id}`,
+        category: "next_action_due",
+        title: "次回アクション期限",
+        detail: `${lead?.consultant_name ?? "案件"}：${a.content.slice(0, 30)}`,
+        href: `/admin/leads/${a.lead_id}`,
+        date: a.next_action_date,
+        severity: "medium",
+      });
+    }
+
+    // 重要度・日付順
+    const sev = { high: 0, medium: 1, info: 2 };
+    items.sort((a, b) => sev[a.severity] - sev[b.severity]);
+    return items;
   }, []);
 }

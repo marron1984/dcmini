@@ -19,7 +19,7 @@ function YesNo({ name, label }: { name: string; label: string }) {
   );
 }
 
-export function ContactForm() {
+export function ContactForm({ lpName }: { lpName?: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -36,9 +36,9 @@ export function ContactForm() {
       utm_term: get("utm_term"),
       utm_content: get("utm_content"),
       gclid: get("gclid"),
-      lp_name: get("lp") || "トップページ",
+      lp_name: get("lp") || lpName || "トップページ",
     });
-  }, []);
+  }, [lpName]);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

@@ -414,3 +414,75 @@ export async function deleteAdReport(id: string) {
   revalidatePath("/admin/ads");
   return { ok: true };
 }
+
+// ---- ランディングページ（LP CMS / 第2フェーズ）----
+export async function upsertLpPage(formData: FormData) {
+  await assertCanManageAds();
+  const supabase = createClient();
+  const id = (formData.get("id") as string) || null;
+
+  const str = (k: string) => {
+    const v = (formData.get(k) as string)?.trim();
+    return v ? v : null;
+  };
+
+  const slug = (str("slug") ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  if (!str("title")) return { ok: false, error: "タイトルを入力してください" };
+  if (!slug) return { ok: false, error: "URLスラッグを入力してください（半角英数字）" };
+
+  // FAQはJSON文字列で受け取る
+  let faq: { q: string; a: string }[] = [];
+  try {
+    const raw = formData.get("faq") as string;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        faq = parsed
+          .filter((f) => f && (f.q || f.a))
+          .map((f) => ({ q: String(f.q ?? ""), a: String(f.a ?? "") }));
+      }
+    }
+  } catch {
+    faq = [];
+  }
+
+  const record = {
+    title: str("title") ?? "",
+    slug,
+    target_keyword: str("target_keyword"),
+    hero_copy: str("hero_copy"),
+    target_audience: str("target_audience"),
+    problems: str("problems"),
+    body: str("body"),
+    faq,
+    status: (formData.get("status") as string) === "published" ? "published" : "draft",
+  };
+
+  if (id) {
+    const { error } = await supabase.from("lp_pages").update(record).eq("id", id);
+    if (error) return { ok: false, error: error.message };
+  } else {
+    const { error } = await supabase.from("lp_pages").insert(record);
+    if (error) {
+      if (error.code === "23505") return { ok: false, error: "このスラッグは既に使われています" };
+      return { ok: false, error: error.message };
+    }
+  }
+  revalidatePath("/admin/lp");
+  revalidatePath(`/lp/${slug}`);
+  return { ok: true };
+}
+
+export async function deleteLpPage(id: string) {
+  await assertCanManageAds();
+  const supabase = createClient();
+  const { error } = await supabase.from("lp_pages").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/admin/lp");
+  return { ok: true };
+}
