@@ -13,6 +13,7 @@ import { ProposalForm } from "@/components/admin/leads/ProposalForm";
 import { LostReasonForm } from "@/components/admin/leads/LostReasonForm";
 import { TourForm } from "@/components/admin/TourForm";
 import { TourResultBadge } from "@/components/admin/StatusBadge";
+import { ReferrerSelect } from "@/components/admin/leads/ReferrerSelect";
 import {
   getLead,
   getLeadActivities,
@@ -20,6 +21,7 @@ import {
   getLeadTours,
   getStaffUsers,
   getFacilities,
+  getReferrers,
 } from "@/lib/data/admin";
 import { ACTIVITY_TYPE_MAP } from "@/lib/constants";
 import { formatDate, formatDateTime, formatYen } from "@/lib/utils";
@@ -43,12 +45,13 @@ export default async function LeadDetailPage({
   const lead = await getLead(params.id);
   if (!lead) notFound();
 
-  const [activities, proposals, tours, staff, facilities] = await Promise.all([
+  const [activities, proposals, tours, staff, facilities, referrers] = await Promise.all([
     getLeadActivities(params.id),
     getLeadProposals(params.id),
     getLeadTours(params.id),
     getStaffUsers(),
     getFacilities(),
+    getReferrers(),
   ]);
 
   const facilityOptions = facilities.map((f) => ({ id: f.id, name: f.name }));
@@ -125,6 +128,13 @@ export default async function LeadDetailPage({
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <div className="mb-4">
+                <ReferrerSelect
+                  leadId={lead.id}
+                  referrerId={lead.referrer_id}
+                  referrers={referrers}
+                />
+              </div>
               <Row label="LP" value={lead.lp_name} />
               <Row label="utm_source" value={lead.utm_source} />
               <Row label="utm_medium" value={lead.utm_medium} />

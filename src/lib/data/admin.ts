@@ -6,6 +6,7 @@ import type {
   Room,
   Tour,
   AppUser,
+  Referrer,
 } from "@/lib/types";
 
 // 共通: クエリ失敗時は空にフォールバック（Supabase未設定でもUIが表示される）
@@ -180,6 +181,7 @@ export interface DashboardStats {
   totalRooms: number;
   upcomingTours: Tour[];
   overdueLeads: Lead[];
+  staffPerformance: { id: string; name: string; total: number; movedIn: number }[];
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
@@ -220,6 +222,19 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       )
       .slice(0, 6);
 
+    // 担当者別成績
+    const perfMap = new Map<string, { id: string; name: string; total: number; movedIn: number }>();
+    for (const l of leads) {
+      if (!l.assigned_user) continue;
+      const key = l.assigned_user.id;
+      const entry =
+        perfMap.get(key) ?? { id: key, name: l.assigned_user.name, total: 0, movedIn: 0 };
+      entry.total += 1;
+      if (l.status === "moved_in") entry.movedIn += 1;
+      perfMap.set(key, entry);
+    }
+    const staffPerformance = Array.from(perfMap.values()).sort((a, b) => b.total - a.total);
+
     return {
       total: leads.length,
       byStatus,
@@ -237,6 +252,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       totalRooms: rooms.length,
       upcomingTours,
       overdueLeads,
+      staffPerformance,
     };
   }, {
     total: 0,
@@ -249,5 +265,102 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     totalRooms: 0,
     upcomingTours: [],
     overdueLeads: [],
+    staffPerformance: [],
   });
+}
+
+// =============================================================
+// 第2フェーズ: 紹介元 / 広告レポート
+// =============================================================
+
+export interface ReferrerWithStats extends Referrer {
+  lead_count: number;
+  tour_count: number;
+  contract_count: number; // 入居完了
+  conversion_rate: number; // 成約率(%)
+}
+
+// 16. 紹介元管理（紹介件数・見学件数・成約件数・成約率を集計）
+export async function getReferrersWithStats(): Promise<ReferrerWithStats[]> {
+  return safe(async () => {
+    const supabase = createClient();
+    const [refRes, leadRes, tourRes] = await Promise.all([
+      supabase.from("referrers").select("*").order("created_at", { ascending: false }),
+      supabase.from("leads").select("id, referrer_id, status"),
+      supabase.from("tours").select("id, lead_id"),
+    ]);
+
+    const referrers = (refRes.data as Referrer[]) ?? [];
+    const leads = (leadRes.data as Pick<Lead, "id" | "referrer_id" | "status">[]) ?? [];
+    const tours = (tourRes.data as { id: string; lead_id: string }[]) ?? [];
+
+    // lead_id → referrer_id の対応
+    const leadToRef = new Map(leads.map((l) => [l.id, l.referrer_id]));
+
+    return referrers.map((r) => {
+      const refLeads = leads.filter((l) => l.referrer_id === r.id);
+      const leadIds = new Set(refLeads.map((l) => l.id));
+      const tourCount = tours.filter((t) => {
+        return leadToRef.get(t.lead_id) === r.id || leadIds.has(t.lead_id);
+      }).length;
+      const contractCount = refLeads.filter((l) => l.status === "moved_in").length;
+      return {
+        ...r,
+        lead_count: refLeads.length,
+        tour_count: tourCount,
+        contract_count: contractCount,
+        conversion_rate:
+          refLeads.length > 0
+            ? Math.round((contractCount / refLeads.length) * 100)
+            : 0,
+      };
+    });
+  }, []);
+}
+
+export async function getReferrers(): Promise<Referrer[]> {
+  return safe(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("referrers")
+      .select("*")
+      .order("name");
+    return (data as Referrer[]) ?? [];
+  }, []);
+}
+
+export async function getReferrer(id: string): Promise<Referrer | null> {
+  return safe(async () => {
+    const supabase = createClient();
+    const { data } = await supabase.from("referrers").select("*").eq("id", id).single();
+    return (data as Referrer) ?? null;
+  }, null);
+}
+
+export interface AdReport {
+  id: string;
+  date: string;
+  campaign_name: string | null;
+  ad_group_name: string | null;
+  keyword: string | null;
+  cost: number | null;
+  impressions: number | null;
+  clicks: number | null;
+  conversions: number | null;
+  tours: number | null;
+  move_ins: number | null;
+  created_at: string;
+}
+
+// 17. 広告管理（手入力）
+export async function getAdReports(): Promise<AdReport[]> {
+  return safe(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("ad_reports")
+      .select("*")
+      .order("date", { ascending: false })
+      .limit(500);
+    return (data as AdReport[]) ?? [];
+  }, []);
 }

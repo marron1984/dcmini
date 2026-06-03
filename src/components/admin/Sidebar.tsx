@@ -9,6 +9,8 @@ import {
   Building2,
   DoorOpen,
   CalendarCheck,
+  Handshake,
+  Megaphone,
   LogOut,
   Menu,
   X,
@@ -24,6 +26,8 @@ const NAV = [
   { href: "/admin/facilities", label: "施設管理", icon: Building2 },
   { href: "/admin/rooms", label: "部屋・空室管理", icon: DoorOpen },
   { href: "/admin/tours", label: "見学管理", icon: CalendarCheck },
+  { href: "/admin/referrers", label: "紹介元管理", icon: Handshake },
+  { href: "/admin/ads", label: "広告管理", icon: Megaphone },
 ];
 
 export function Sidebar({ user }: { user: AppUser }) {

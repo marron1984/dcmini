@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Table, LayoutGrid, Phone, Search } from "lucide-react";
+import { Table, LayoutGrid, Phone, Search, Download } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { LeadStatusBadge } from "@/components/admin/StatusBadge";
 import { Input, Select } from "@/components/ui/input";
@@ -47,25 +47,35 @@ export default async function LeadsPage({
         title="案件管理"
         description={`${leads.length}件の入居相談`}
         action={
-          <div className="flex rounded-xl border border-slate-300 bg-white p-1">
-            <Link
-              href={buildHref({ view: "table" })}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold",
-                view === "table" ? "bg-brand-600 text-white" : "text-ink-soft"
-              )}
+          <div className="flex items-center gap-2">
+            <a
+              href={`/admin/leads/export?${new URLSearchParams(
+                Object.entries(searchParams).filter(([, v]) => v) as [string, string][]
+              ).toString()}`}
+              className="flex h-9 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-ink-soft hover:bg-slate-50"
             >
-              <Table className="h-4 w-4" /> 一覧
-            </Link>
-            <Link
-              href={buildHref({ view: "kanban" })}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold",
-                view === "kanban" ? "bg-brand-600 text-white" : "text-ink-soft"
-              )}
-            >
-              <LayoutGrid className="h-4 w-4" /> カンバン
-            </Link>
+              <Download className="h-4 w-4" /> CSV
+            </a>
+            <div className="flex rounded-xl border border-slate-300 bg-white p-1">
+              <Link
+                href={buildHref({ view: "table" })}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold",
+                  view === "table" ? "bg-brand-600 text-white" : "text-ink-soft"
+                )}
+              >
+                <Table className="h-4 w-4" /> 一覧
+              </Link>
+              <Link
+                href={buildHref({ view: "kanban" })}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold",
+                  view === "kanban" ? "bg-brand-600 text-white" : "text-ink-soft"
+                )}
+              >
+                <LayoutGrid className="h-4 w-4" /> カンバン
+              </Link>
+            </div>
           </div>
         }
       />

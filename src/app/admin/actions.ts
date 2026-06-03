@@ -15,6 +15,15 @@ async function assertCanEdit() {
   return user;
 }
 
+// 広告・LP管理の編集権限（admin / ad_manager）
+async function assertCanManageAds() {
+  const user = await getCurrentUser();
+  if (!user || !["admin", "ad_manager"].includes(user.role)) {
+    throw new Error("権限がありません");
+  }
+  return user;
+}
+
 export async function signOut() {
   const supabase = createClient();
   await supabase.auth.signOut();
@@ -52,6 +61,18 @@ export async function assignLead(leadId: string, userId: string | null) {
   if (error) return { ok: false, error: error.message };
   revalidatePath(`/admin/leads/${leadId}`);
   revalidatePath("/admin/leads");
+  return { ok: true };
+}
+
+export async function assignReferrer(leadId: string, referrerId: string | null) {
+  await assertCanEdit();
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("leads")
+    .update({ referrer_id: referrerId })
+    .eq("id", leadId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/admin/leads/${leadId}`);
   return { ok: true };
 }
 
@@ -305,5 +326,91 @@ export async function upsertTour(formData: FormData) {
   }
   revalidatePath("/admin/tours");
   if (record.lead_id) revalidatePath(`/admin/leads/${record.lead_id}`);
+  return { ok: true };
+}
+
+// ---- 紹介元（16）----
+export async function upsertReferrer(formData: FormData) {
+  await assertCanEdit();
+  const supabase = createClient();
+  const id = (formData.get("id") as string) || null;
+
+  const str = (k: string) => {
+    const v = (formData.get(k) as string)?.trim();
+    return v ? v : null;
+  };
+
+  const record = {
+    type: (formData.get("type") as string) || "web",
+    name: str("name") ?? "",
+    contact_person: str("contact_person"),
+    phone: str("phone"),
+    email: str("email"),
+    address: str("address"),
+    note: str("note"),
+    last_contacted_at: str("last_contacted_at"),
+  };
+
+  if (!record.name) return { ok: false, error: "紹介元名を入力してください" };
+
+  if (id) {
+    const { error } = await supabase.from("referrers").update(record).eq("id", id);
+    if (error) return { ok: false, error: error.message };
+  } else {
+    const { error } = await supabase.from("referrers").insert(record);
+    if (error) return { ok: false, error: error.message };
+  }
+  revalidatePath("/admin/referrers");
+  if (id) revalidatePath(`/admin/referrers/${id}`);
+  return { ok: true };
+}
+
+// ---- 広告レポート（17）----
+export async function upsertAdReport(formData: FormData) {
+  await assertCanManageAds();
+  const supabase = createClient();
+  const id = (formData.get("id") as string) || null;
+
+  const num = (k: string) => {
+    const v = (formData.get(k) as string)?.trim();
+    if (!v) return null;
+    const n = Number(v.replace(/[^0-9.-]/g, ""));
+    return Number.isNaN(n) ? null : Math.round(n);
+  };
+  const str = (k: string) => {
+    const v = (formData.get(k) as string)?.trim();
+    return v ? v : null;
+  };
+
+  const record = {
+    date: str("date") ?? new Date().toISOString().slice(0, 10),
+    campaign_name: str("campaign_name"),
+    ad_group_name: str("ad_group_name"),
+    keyword: str("keyword"),
+    cost: num("cost"),
+    impressions: num("impressions"),
+    clicks: num("clicks"),
+    conversions: num("conversions"),
+    tours: num("tours"),
+    move_ins: num("move_ins"),
+  };
+
+  if (id) {
+    const { error } = await supabase.from("ad_reports").update(record).eq("id", id);
+    if (error) return { ok: false, error: error.message };
+  } else {
+    const { error } = await supabase.from("ad_reports").insert(record);
+    if (error) return { ok: false, error: error.message };
+  }
+  revalidatePath("/admin/ads");
+  return { ok: true };
+}
+
+export async function deleteAdReport(id: string) {
+  await assertCanManageAds();
+  const supabase = createClient();
+  const { error } = await supabase.from("ad_reports").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/admin/ads");
   return { ok: true };
 }

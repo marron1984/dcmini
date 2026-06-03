@@ -26,6 +26,7 @@ export function SiteFooter({ phone }: { phone: string }) {
         <div className="mt-8 flex flex-col gap-2 border-t border-slate-100 pt-6 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} {SITE_NAME}</p>
           <div className="flex gap-4">
+            <Link href="/vacancies" className="hover:text-ink">空室・施設情報</Link>
             <Link href="/#faq" className="hover:text-ink">よくある質問</Link>
             <Link href="/#contact" className="hover:text-ink">相談フォーム</Link>
           </div>

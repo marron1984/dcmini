@@ -11,12 +11,19 @@ import {
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LeadStatusBadge } from "@/components/admin/StatusBadge";
-import { getDashboardStats } from "@/lib/data/admin";
+import { getDashboardStats, getReferrersWithStats } from "@/lib/data/admin";
 import { LEAD_STATUSES } from "@/lib/constants";
 import { formatDateTime, relativeTime } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const stats = await getDashboardStats();
+  const [stats, referrers] = await Promise.all([
+    getDashboardStats(),
+    getReferrersWithStats(),
+  ]);
+  const referrerRanking = [...referrers]
+    .filter((r) => r.lead_count > 0)
+    .sort((a, b) => b.lead_count - a.lead_count)
+    .slice(0, 5);
   const occupancy =
     stats.totalRooms > 0
       ? Math.round(((stats.totalRooms - stats.vacantRooms) / stats.totalRooms) * 100)
@@ -144,6 +151,54 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* 担当者別成績・紹介元ランキング */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle>担当者別成績</CardTitle></CardHeader>
+          <CardContent>
+            {stats.staffPerformance.length === 0 ? (
+              <p className="text-sm text-ink-muted">データがありません。</p>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {stats.staffPerformance.map((s) => (
+                  <li key={s.id} className="flex items-center justify-between py-2.5">
+                    <span className="font-semibold text-ink">{s.name}</span>
+                    <span className="text-sm text-ink-soft">
+                      担当 {s.total}件 / 入居 <span className="font-semibold text-emerald-600">{s.movedIn}</span>件
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>紹介元ランキング</CardTitle></CardHeader>
+          <CardContent>
+            {referrerRanking.length === 0 ? (
+              <p className="text-sm text-ink-muted">紹介実績がありません。</p>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {referrerRanking.map((r, i) => (
+                  <li key={r.id} className="flex items-center justify-between py-2.5">
+                    <span className="flex items-center gap-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-50 text-xs font-bold text-brand-700">
+                        {i + 1}
+                      </span>
+                      <span className="font-semibold text-ink">{r.name}</span>
+                    </span>
+                    <span className="text-sm text-ink-soft">
+                      紹介 {r.lead_count}件 / 成約率 <span className="font-semibold text-brand-700">{r.conversion_rate}%</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </>
   );
