@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP",
+    "Meiryo", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-slate-50 text-ink antialiased;
+  font-feature-settings: "palt";
+}
+
+/* セクション見出しの共通装飾 */
+.section-eyebrow {
+  @apply mb-2 text-sm font-bold tracking-wide text-brand-600;
+}
