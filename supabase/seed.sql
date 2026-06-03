@@ -36,3 +36,17 @@ values (
   '[{"q":"認知症でも入居できますか？","a":"対応可能な施設をご紹介できます。症状をお伺いし、最適な住まいをご提案します。"}]'::jsonb
 )
 on conflict (slug) do nothing;
+
+-- デモ用コラム記事
+insert into articles (title, slug, excerpt, body, category, keywords, status, published_at)
+values (
+  '老人ホームの費用相場を分かりやすく解説',
+  'cost-guide',
+  '老人ホームの月額費用や初期費用の目安、費用を抑えるポイントを分かりやすくまとめました。',
+  E'老人ホームの費用は施設の種類や立地によって大きく変わります。\n\n月額費用の目安は10万円〜25万円程度が一般的です。初期費用が必要な施設もあれば、生活保護の方が入居できる初期費用0円の施設もあります。\n\nご予算に合わせた施設選びは、専門スタッフが無料でサポートします。お気軽にご相談ください。',
+  '費用',
+  '老人ホーム 費用 相場 大阪',
+  'published',
+  now()
+)
+on conflict (slug) do nothing;

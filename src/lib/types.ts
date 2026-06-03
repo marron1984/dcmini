@@ -205,3 +205,29 @@ export interface LpPage {
   created_at: string;
   updated_at: string;
 }
+
+export interface Article {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  body: string | null;
+  cover_image_url: string | null;
+  category: string | null;
+  keywords: string | null;
+  status: string; // draft / published
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuditLog {
+  id: string;
+  user_id: string | null;
+  user_name: string | null;
+  action: string;
+  entity: string | null;
+  entity_id: string | null;
+  detail: Record<string, unknown>;
+  created_at: string;
+}

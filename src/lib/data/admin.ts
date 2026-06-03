@@ -8,6 +8,8 @@ import type {
   AppUser,
   Referrer,
   LpPage,
+  Article,
+  AuditLog,
 } from "@/lib/types";
 
 // 共通: クエリ失敗時は空にフォールバック（Supabase未設定でもUIが表示される）
@@ -558,5 +560,40 @@ export async function getNotifications(): Promise<NotificationItem[]> {
     const sev = { high: 0, medium: 1, info: 2 };
     items.sort((a, b) => sev[a.severity] - sev[b.severity]);
     return items;
+  }, []);
+}
+
+// =============================================================
+// 第2フェーズ: SEO記事CMS / 操作ログ
+// =============================================================
+
+export async function getArticles(): Promise<Article[]> {
+  return safe(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("articles")
+      .select("*")
+      .order("updated_at", { ascending: false });
+    return (data as Article[]) ?? [];
+  }, []);
+}
+
+export async function getArticleById(id: string): Promise<Article | null> {
+  return safe(async () => {
+    const supabase = createClient();
+    const { data } = await supabase.from("articles").select("*").eq("id", id).single();
+    return (data as Article) ?? null;
+  }, null);
+}
+
+export async function getAuditLogs(): Promise<AuditLog[]> {
+  return safe(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("audit_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(300);
+    return (data as AuditLog[]) ?? [];
   }, []);
 }

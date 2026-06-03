@@ -12,6 +12,8 @@ import {
   Handshake,
   Megaphone,
   FileText,
+  Newspaper,
+  ScrollText,
   LogOut,
   Menu,
   X,
@@ -30,6 +32,8 @@ const NAV = [
   { href: "/admin/referrers", label: "紹介元管理", icon: Handshake },
   { href: "/admin/ads", label: "広告管理", icon: Megaphone },
   { href: "/admin/lp", label: "LP管理", icon: FileText },
+  { href: "/admin/articles", label: "記事CMS", icon: Newspaper },
+  { href: "/admin/logs", label: "操作ログ", icon: ScrollText },
 ];
 
 export function Sidebar({ user }: { user: AppUser }) {

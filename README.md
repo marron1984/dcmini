@@ -46,6 +46,8 @@
   `/lp/[slug]` で動的に公開。問い合わせフォーム・電話/LINE CTA付き。
 - 通知機能（要件22）：新規問い合わせ・初回連絡未対応・見学前日・次回アクション期限・長期放置・再アプローチ予定を
   集計し、管理画面のベル（`/admin/notifications`）に表示。
+- SEO記事CMS（コラム）：管理画面で記事を作成・編集（カテゴリ・抜粋・本文・公開状態）し、`/column`・`/column/[slug]` で公開。
+- 操作ログ（要件32）：主要な更新操作を `audit_logs` に記録し、管理者のみ `/admin/logs` で閲覧可能。
 
 ## セットアップ
 
@@ -76,9 +78,10 @@ cp .env.example .env.local
 Supabase のプロジェクトで以下のSQLを順に実行します（SQL Editor もしくは Supabase CLI）。
 
 ```
-supabase/migrations/0001_init.sql   -- テーブル・列挙型・トリガ
-supabase/migrations/0002_rls.sql    -- RLSポリシー・新規ユーザー自動作成トリガ
-supabase/seed.sql                   -- デモ用施設データ（任意）
+supabase/migrations/0001_init.sql            -- テーブル・列挙型・トリガ
+supabase/migrations/0002_rls.sql             -- RLSポリシー・新規ユーザー自動作成トリガ
+supabase/migrations/0003_articles_audit.sql  -- 記事CMS(articles)・操作ログ(audit_logs)
+supabase/seed.sql                            -- デモ用データ（施設・LP・コラム / 任意）
 ```
 
 スタッフアカウントは Supabase Auth でユーザーを作成すると、トリガにより

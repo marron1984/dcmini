@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
+import { logAction } from "@/lib/audit";
 import type { LeadStatus, RoomStatus, TourResult } from "@/lib/types";
 
 // 編集権限チェック（admin / consultant のみ書き込み可）
@@ -46,6 +47,7 @@ export async function updateLeadStatus(leadId: string, status: LeadStatus) {
     activity_type: "status_change",
     content: `ステータスを変更しました`,
   });
+  await logAction("lead.status_change", { entity: "lead", entityId: leadId, detail: { status } });
   revalidatePath(`/admin/leads/${leadId}`);
   revalidatePath("/admin/leads");
   return { ok: true };
@@ -154,6 +156,7 @@ export async function setLostReason(
     })
     .eq("id", leadId);
   if (error) return { ok: false, error: error.message };
+  await logAction("lead.lost", { entity: "lead", entityId: leadId, detail: { lostReason, reapproachDate } });
   revalidatePath(`/admin/leads/${leadId}`);
   revalidatePath("/admin/leads");
   return { ok: true };
@@ -234,6 +237,7 @@ export async function upsertFacility(formData: FormData) {
     const { error } = await supabase.from("facilities").insert(record);
     if (error) return { ok: false, error: error.message };
   }
+  await logAction(id ? "facility.update" : "facility.create", { entity: "facility", entityId: id, detail: { name: record.name } });
   revalidatePath("/admin/facilities");
   if (id) revalidatePath(`/admin/facilities/${id}`);
   return { ok: true };
@@ -278,6 +282,7 @@ export async function upsertRoom(formData: FormData) {
     const { error } = await supabase.from("rooms").insert(record);
     if (error) return { ok: false, error: error.message };
   }
+  await logAction(id ? "room.update" : "room.create", { entity: "room", entityId: id, detail: { facilityId, room: record.room_number, status: record.status } });
   revalidatePath("/admin/rooms");
   revalidatePath(`/admin/facilities/${facilityId}`);
   return { ok: true };
@@ -288,6 +293,7 @@ export async function updateRoomStatus(roomId: string, status: RoomStatus) {
   const supabase = createClient();
   const { error } = await supabase.from("rooms").update({ status }).eq("id", roomId);
   if (error) return { ok: false, error: error.message };
+  await logAction("room.status_change", { entity: "room", entityId: roomId, detail: { status } });
   revalidatePath("/admin/rooms");
   return { ok: true };
 }
@@ -324,6 +330,7 @@ export async function upsertTour(formData: FormData) {
     const { error } = await supabase.from("tours").insert(record);
     if (error) return { ok: false, error: error.message };
   }
+  await logAction(id ? "tour.update" : "tour.create", { entity: "tour", entityId: id, detail: { leadId: record.lead_id } });
   revalidatePath("/admin/tours");
   if (record.lead_id) revalidatePath(`/admin/leads/${record.lead_id}`);
   return { ok: true };
@@ -360,6 +367,7 @@ export async function upsertReferrer(formData: FormData) {
     const { error } = await supabase.from("referrers").insert(record);
     if (error) return { ok: false, error: error.message };
   }
+  await logAction(id ? "referrer.update" : "referrer.create", { entity: "referrer", entityId: id, detail: { name: record.name } });
   revalidatePath("/admin/referrers");
   if (id) revalidatePath(`/admin/referrers/${id}`);
   return { ok: true };
@@ -402,6 +410,7 @@ export async function upsertAdReport(formData: FormData) {
     const { error } = await supabase.from("ad_reports").insert(record);
     if (error) return { ok: false, error: error.message };
   }
+  await logAction(id ? "ad_report.update" : "ad_report.create", { entity: "ad_report", entityId: id, detail: { date: record.date } });
   revalidatePath("/admin/ads");
   return { ok: true };
 }
@@ -473,6 +482,7 @@ export async function upsertLpPage(formData: FormData) {
       return { ok: false, error: error.message };
     }
   }
+  await logAction(id ? "lp.update" : "lp.create", { entity: "lp_page", entityId: id, detail: { slug, status: record.status } });
   revalidatePath("/admin/lp");
   revalidatePath(`/lp/${slug}`);
   return { ok: true };
@@ -484,5 +494,80 @@ export async function deleteLpPage(id: string) {
   const { error } = await supabase.from("lp_pages").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
   revalidatePath("/admin/lp");
+  return { ok: true };
+}
+
+// ---- SEO記事CMS（articles / 第2フェーズ）----
+export async function upsertArticle(formData: FormData) {
+  await assertCanManageAds();
+  const supabase = createClient();
+  const id = (formData.get("id") as string) || null;
+
+  const str = (k: string) => {
+    const v = (formData.get(k) as string)?.trim();
+    return v ? v : null;
+  };
+
+  const slug = (str("slug") ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  if (!str("title")) return { ok: false, error: "タイトルを入力してください" };
+  if (!slug) return { ok: false, error: "URLスラッグを入力してください（半角英数字）" };
+
+  const status = (formData.get("status") as string) === "published" ? "published" : "draft";
+
+  const record: Record<string, unknown> = {
+    title: str("title") ?? "",
+    slug,
+    excerpt: str("excerpt"),
+    body: str("body"),
+    cover_image_url: str("cover_image_url"),
+    category: str("category"),
+    keywords: str("keywords"),
+    status,
+  };
+
+  // 公開時に published_at を初回設定
+  if (status === "published") {
+    if (id) {
+      const { data: existing } = await supabase
+        .from("articles")
+        .select("published_at")
+        .eq("id", id)
+        .single();
+      if (!existing?.published_at) record.published_at = new Date().toISOString();
+    } else {
+      record.published_at = new Date().toISOString();
+    }
+  }
+
+  if (id) {
+    const { error } = await supabase.from("articles").update(record).eq("id", id);
+    if (error) return { ok: false, error: error.message };
+  } else {
+    const { error } = await supabase.from("articles").insert(record);
+    if (error) {
+      if (error.code === "23505") return { ok: false, error: "このスラッグは既に使われています" };
+      return { ok: false, error: error.message };
+    }
+  }
+  await logAction(id ? "article.update" : "article.create", { entity: "article", entityId: id, detail: { slug, status } });
+  revalidatePath("/admin/articles");
+  revalidatePath(`/column/${slug}`);
+  revalidatePath("/column");
+  return { ok: true };
+}
+
+export async function deleteArticle(id: string) {
+  await assertCanManageAds();
+  const supabase = createClient();
+  const { error } = await supabase.from("articles").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  await logAction("article.delete", { entity: "article", entityId: id });
+  revalidatePath("/admin/articles");
+  revalidatePath("/column");
   return { ok: true };
 }
