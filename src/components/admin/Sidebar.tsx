@@ -14,6 +14,7 @@ import {
   FileText,
   Newspaper,
   ScrollText,
+  UserCog,
   LogOut,
   Menu,
   X,
@@ -33,6 +34,7 @@ const NAV = [
   { href: "/admin/ads", label: "広告管理", icon: Megaphone },
   { href: "/admin/lp", label: "LP管理", icon: FileText },
   { href: "/admin/articles", label: "記事CMS", icon: Newspaper },
+  { href: "/admin/users", label: "ユーザー管理", icon: UserCog },
   { href: "/admin/logs", label: "操作ログ", icon: ScrollText },
 ];
 

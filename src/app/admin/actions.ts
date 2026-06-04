@@ -571,3 +571,37 @@ export async function deleteArticle(id: string) {
   revalidatePath("/column");
   return { ok: true };
 }
+
+// ---- ユーザー管理（21. 権限管理 / admin専用）----
+async function assertAdmin() {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "admin") {
+    throw new Error("権限がありません");
+  }
+  return user;
+}
+
+export async function updateUserRole(userId: string, role: string) {
+  await assertAdmin();
+  const allowed = ["admin", "consultant", "viewer", "ad_manager"];
+  if (!allowed.includes(role)) return { ok: false, error: "不正な権限です" };
+  const supabase = createClient();
+  const { error } = await supabase.from("users").update({ role }).eq("id", userId);
+  if (error) return { ok: false, error: error.message };
+  await logAction("user.role_change", { entity: "user", entityId: userId, detail: { role } });
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
+export async function toggleUserActive(userId: string, isActive: boolean) {
+  const admin = await assertAdmin();
+  if (admin.id === userId && !isActive) {
+    return { ok: false, error: "自分自身を無効化することはできません" };
+  }
+  const supabase = createClient();
+  const { error } = await supabase.from("users").update({ is_active: isActive }).eq("id", userId);
+  if (error) return { ok: false, error: error.message };
+  await logAction("user.active_change", { entity: "user", entityId: userId, detail: { isActive } });
+  revalidatePath("/admin/users");
+  return { ok: true };
+}

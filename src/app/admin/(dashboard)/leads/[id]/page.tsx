@@ -14,6 +14,8 @@ import { LostReasonForm } from "@/components/admin/leads/LostReasonForm";
 import { TourForm } from "@/components/admin/TourForm";
 import { TourResultBadge } from "@/components/admin/StatusBadge";
 import { ReferrerSelect } from "@/components/admin/leads/ReferrerSelect";
+import { MatchList } from "@/components/admin/leads/MatchList";
+import { matchFacilities, scoreColor } from "@/lib/matching";
 import {
   getLead,
   getLeadActivities,
@@ -55,6 +57,20 @@ export default async function LeadDetailPage({
   ]);
 
   const facilityOptions = facilities.map((f) => ({ id: f.id, name: f.name }));
+
+  // 施設マッチング（ルールベース・上位8件）
+  const matches = matchFacilities(lead, facilities)
+    .slice(0, 8)
+    .map((m) => ({
+      facilityId: m.facility.id,
+      facilityName: m.facility.name,
+      type: m.facility.type,
+      area: m.facility.area,
+      monthlyFee: m.facility.monthly_fee,
+      score: m.score,
+      scoreColor: scoreColor(m.score),
+      reasons: m.reasons.map((r) => ({ label: r.label, ok: r.ok })),
+    }));
 
   return (
     <>
@@ -186,6 +202,11 @@ export default async function LeadDetailPage({
                     id: "hearing",
                     label: "ヒアリング",
                     content: <HearingForm leadId={lead.id} initial={lead.hearing} />,
+                  },
+                  {
+                    id: "matching",
+                    label: "施設マッチング",
+                    content: <MatchList leadId={lead.id} matches={matches} />,
                   },
                   {
                     id: "edit",

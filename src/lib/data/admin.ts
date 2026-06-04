@@ -597,3 +597,15 @@ export async function getAuditLogs(): Promise<AuditLog[]> {
     return (data as AuditLog[]) ?? [];
   }, []);
 }
+
+// ユーザー管理（21）: 無効含む全ユーザーを取得
+export async function getAllUsers(): Promise<AppUser[]> {
+  return safe(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("users")
+      .select("*")
+      .order("created_at", { ascending: true });
+    return (data as AppUser[]) ?? [];
+  }, []);
+}
