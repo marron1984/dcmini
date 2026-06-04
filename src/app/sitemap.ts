@@ -9,6 +9,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/`, lastModified: now, priority: 1 },
     { url: `${base}/vacancies`, lastModified: now, priority: 0.7 },
     { url: `${base}/column`, lastModified: now, priority: 0.7 },
+    { url: `${base}/about`, lastModified: now, priority: 0.5 },
+    { url: `${base}/privacy`, lastModified: now, priority: 0.3 },
   ];
   for (const c of CONCERN_CATEGORIES) {
     routes.push({

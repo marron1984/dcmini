@@ -77,25 +77,27 @@ export default async function SoudanLpPage({
 
   return (
     <>
-      <section className="bg-gradient-to-b from-brand-50 to-white px-4 py-14">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="inline-block rounded-full bg-brand-100 px-4 py-1.5 text-sm font-bold text-brand-700">
+      <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-white px-4 py-16">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-200/40 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 bg-hero-grid [background-size:24px_24px] opacity-50" />
+        <div className="relative mx-auto max-w-3xl text-center animate-fade-up">
+          <p className="inline-block rounded-full border border-brand-100 bg-white/80 px-4 py-1.5 text-sm font-bold text-brand-700 shadow-soft backdrop-blur">
             {cat.label}
           </p>
-          <h1 className="mt-5 text-2xl font-bold leading-tight text-ink sm:text-4xl">
+          <h1 className="mt-5 text-2xl font-bold leading-[1.25] tracking-tight text-ink sm:text-4xl">
             {content.catch}
           </h1>
           <p className="mt-4 text-ink-soft">
             専門スタッフが無料でご相談をお受けします。お気軽にお問い合わせください。
           </p>
-          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-            <a href="#contact" className="inline-flex h-14 items-center justify-center rounded-xl bg-brand-600 px-7 text-lg font-bold text-white hover:bg-brand-700">
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <a href="#contact" className="inline-flex h-14 items-center justify-center rounded-xl bg-brand-600 px-7 text-lg font-bold text-white shadow-lift transition-all hover:bg-brand-700 hover:-translate-y-0.5 active:scale-[0.98]">
               無料で相談する
             </a>
-            <a href={`tel:${tel}`} data-cv="phone" className="inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-brand-200 bg-white px-7 text-lg font-bold text-brand-700 hover:bg-brand-50">
+            <a href={`tel:${tel}`} data-cv="phone" className="inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-brand-200 bg-white/80 px-7 text-lg font-bold text-brand-700 shadow-soft backdrop-blur transition-all hover:bg-brand-50 hover:-translate-y-0.5 active:scale-[0.98]">
               <Phone className="h-5 w-5" /> 電話で相談
             </a>
-            <a href={settings.line_url} target="_blank" rel="noopener noreferrer" data-cv="line" className="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-[#06C755] px-7 text-lg font-bold text-white hover:opacity-90">
+            <a href={settings.line_url} target="_blank" rel="noopener noreferrer" data-cv="line" className="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-[#06C755] px-7 text-lg font-bold text-white shadow-soft transition-all hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.98]">
               <MessageCircle className="h-5 w-5" /> LINE相談
             </a>
           </div>
@@ -103,24 +105,24 @@ export default async function SoudanLpPage({
       </section>
 
       <section className="mx-auto max-w-4xl px-4 py-14">
-        <div className="grid gap-8 md:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-soft">
             <h2 className="text-lg font-bold text-ink">こんな方へ</h2>
             <ul className="mt-4 space-y-3">
               {content.audience.map((a) => (
                 <li key={a} className="flex items-start gap-2 text-ink-soft">
-                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-500" />
+                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-500" />
                   {a}
                 </li>
               ))}
             </ul>
           </div>
-          <div className="rounded-2xl border border-brand-100 bg-brand-50/50 p-6">
+          <div className="rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50/70 to-accent-50/50 p-6 shadow-soft">
             <h2 className="text-lg font-bold text-ink">解決できること</h2>
             <ul className="mt-4 space-y-3">
               {content.solutions.map((s) => (
                 <li key={s} className="flex items-start gap-2 text-ink-soft">
-                  <Check className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
+                  <Check className="mt-0.5 h-5 w-5 shrink-0 text-accent-600" />
                   {s}
                 </li>
               ))}
