@@ -36,10 +36,10 @@ export function HearingForm({
           <h4 className="mb-3 text-sm font-bold text-brand-700">{section.title}</h4>
           <div className="grid gap-3 sm:grid-cols-2">
             {section.items.map((item) => (
-              <div key={item.key}>
-                <label className="mb-1 block text-xs font-semibold text-ink-soft">
+              <label key={item.key} className="block">
+                <span className="mb-1 block text-xs font-semibold text-ink-soft">
                   {item.label}
-                </label>
+                </span>
                 {item.type === "bool" ? (
                   <Select
                     value={(values[item.key] as string) ?? ""}
@@ -55,7 +55,7 @@ export function HearingForm({
                     onChange={(e) => set(item.key, e.target.value)}
                   />
                 )}
-              </div>
+              </label>
             ))}
           </div>
         </div>

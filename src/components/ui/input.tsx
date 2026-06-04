@@ -77,13 +77,18 @@ export function Field({
   children: React.ReactNode;
   className?: string;
 }) {
+  // <label> で control を内包し、暗黙的にラベルと入力を関連付ける（a11y）
   return (
-    <div className={className}>
-      <Label>
+    <label className={cn("block", className)}>
+      <span className="mb-1.5 block text-sm font-semibold text-ink-soft">
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
-      </Label>
+        {required && (
+          <span className="ml-1 text-red-500" aria-hidden="true">
+            *
+          </span>
+        )}
+      </span>
       {children}
-    </div>
+    </label>
   );
 }

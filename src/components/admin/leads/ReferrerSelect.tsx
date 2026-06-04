@@ -28,14 +28,16 @@ export function ReferrerSelect({
 
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-semibold text-ink-soft">紹介元</label>
-      <Select defaultValue={referrerId ?? ""} onChange={onChange} disabled={isPending}>
-        <option value="">未設定</option>
-        {referrers.map((r) => (
-          <option key={r.id} value={r.id}>{r.name}</option>
-        ))}
-      </Select>
-      {msg && <p className="mt-1 text-xs font-semibold text-emerald-600">{msg}</p>}
+      <label className="block">
+        <span className="mb-1.5 block text-sm font-semibold text-ink-soft">紹介元</span>
+        <Select defaultValue={referrerId ?? ""} onChange={onChange} disabled={isPending}>
+          <option value="">未設定</option>
+          {referrers.map((r) => (
+            <option key={r.id} value={r.id}>{r.name}</option>
+          ))}
+        </Select>
+      </label>
+      {msg && <p role="status" className="mt-1 text-xs font-semibold text-emerald-600">{msg}</p>}
     </div>
   );
 }

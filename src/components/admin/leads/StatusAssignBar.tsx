@@ -41,25 +41,25 @@ export function StatusAssignBar({
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <div className="flex-1">
-        <label className="mb-1.5 block text-sm font-semibold text-ink-soft">ステータス</label>
+      <label className="flex-1">
+        <span className="mb-1.5 block text-sm font-semibold text-ink-soft">ステータス</span>
         <Select defaultValue={status} onChange={onStatus} disabled={isPending}>
           {LEAD_STATUSES.map((s) => (
             <option key={s.value} value={s.value}>{s.label}</option>
           ))}
         </Select>
-      </div>
-      <div className="flex-1">
-        <label className="mb-1.5 block text-sm font-semibold text-ink-soft">担当者</label>
+      </label>
+      <label className="flex-1">
+        <span className="mb-1.5 block text-sm font-semibold text-ink-soft">担当者</span>
         <Select defaultValue={assignedUserId ?? ""} onChange={onAssign} disabled={isPending}>
           <option value="">未割当</option>
           {staff.map((u) => (
             <option key={u.id} value={u.id}>{u.name}</option>
           ))}
         </Select>
-      </div>
+      </label>
       {msg && (
-        <p className="pb-2.5 text-xs font-semibold text-emerald-600">{msg}</p>
+        <p role="status" className="pb-2.5 text-xs font-semibold text-emerald-600">{msg}</p>
       )}
     </div>
   );

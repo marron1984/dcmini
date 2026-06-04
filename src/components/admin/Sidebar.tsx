@@ -65,6 +65,7 @@ export function Sidebar({ user }: { user: AppUser }) {
             key={item.href}
             href={item.href}
             onClick={() => setOpen(false)}
+            aria-current={active ? "page" : undefined}
             className={cn(
               "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-semibold transition-all duration-150",
               active
@@ -93,7 +94,12 @@ export function Sidebar({ user }: { user: AppUser }) {
       {/* モバイルヘッダー */}
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
         <span className="font-bold text-ink">{SITE_NAME}</span>
-        <button onClick={() => setOpen(true)} aria-label="メニュー">
+        <button
+          onClick={() => setOpen(true)}
+          aria-label="メニューを開く"
+          aria-expanded={open}
+          aria-controls="admin-sidebar"
+        >
           <Menu className="h-6 w-6" />
         </button>
       </div>
@@ -107,6 +113,8 @@ export function Sidebar({ user }: { user: AppUser }) {
       )}
 
       <aside
+        id="admin-sidebar"
+        aria-label="管理メニュー"
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-gradient-to-b from-slate-900 to-slate-800 py-5 shadow-xl transition-transform lg:static lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
