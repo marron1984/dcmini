@@ -194,16 +194,77 @@ export interface DashboardStats {
   staffPerformance: { id: string; name: string; total: number; movedIn: number }[];
 }
 
+// 集計の純粋関数（取得済みデータを受け取りKPIを算出。テスト容易化のためnow注入可）
+export function computeDashboardStats(
+  leads: Lead[],
+  rooms: { id: string; status: string }[],
+  tours: Tour[],
+  now: Date = new Date()
+): DashboardStats {
+  const startOfMonth = new Date(now);
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+  const startMs = startOfMonth.getTime();
+  const nowMs = now.getTime();
+  // 日時文字列を安全に数値化（フォーマット/TZ差異に依存しない比較のため）
+  const ts = (v?: string | null) => (v ? new Date(v).getTime() : 0);
+
+  const byStatus: Record<string, number> = {};
+  for (const l of leads) byStatus[l.status] = (byStatus[l.status] ?? 0) + 1;
+
+  const overdueLeads = leads
+    .filter(
+      (l) =>
+        ["new", "awaiting_contact"].includes(l.status) &&
+        nowMs - ts(l.created_at) > 2 * 24 * 60 * 60 * 1000
+    )
+    .slice(0, 8);
+
+  const upcomingTours = tours
+    .filter((t) => t.scheduled_at && ts(t.scheduled_at) >= nowMs)
+    .sort((a, b) => ts(a.scheduled_at) - ts(b.scheduled_at))
+    .slice(0, 6);
+
+  // 担当者別成績
+  const perfMap = new Map<string, { id: string; name: string; total: number; movedIn: number }>();
+  for (const l of leads) {
+    if (!l.assigned_user) continue;
+    const key = l.assigned_user.id;
+    const entry =
+      perfMap.get(key) ?? { id: key, name: l.assigned_user.name, total: 0, movedIn: 0 };
+    entry.total += 1;
+    if (l.status === "moved_in") entry.movedIn += 1;
+    perfMap.set(key, entry);
+  }
+  const staffPerformance = Array.from(perfMap.values()).sort((a, b) => b.total - a.total);
+
+  // ステータス遷移時刻（専用列。未設定の既存行は updated_at で近似）
+  const statusChangedMs = (l: Lead) => ts(l.status_changed_at ?? l.updated_at);
+
+  return {
+    total: leads.length,
+    byStatus,
+    newThisMonth: leads.filter((l) => ts(l.created_at) >= startMs).length,
+    movedInThisMonth: leads.filter(
+      (l) => l.status === "moved_in" && statusChangedMs(l) >= startMs
+    ).length,
+    lostThisMonth: leads.filter(
+      (l) => l.status === "lost" && statusChangedMs(l) >= startMs
+    ).length,
+    toursThisMonth: tours.filter(
+      (t) => t.scheduled_at && ts(t.scheduled_at) >= startMs
+    ).length,
+    vacantRooms: rooms.filter((r) => r.status === "vacant").length,
+    totalRooms: rooms.length,
+    upcomingTours,
+    overdueLeads,
+    staffPerformance,
+  };
+}
+
 export async function getDashboardStats(): Promise<DashboardStats> {
   return safe(async () => {
     const supabase = createClient();
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-    const startMs = startOfMonth.getTime();
-    // 日時文字列を安全に数値化（フォーマット/TZ差異に依存しない比較のため）
-    const ts = (v?: string | null) => (v ? new Date(v).getTime() : 0);
-
     const [leadsRes, roomsRes, toursRes] = await Promise.all([
       supabase.from("leads").select("id, status, created_at, updated_at, status_changed_at, consultant_name, resident_name, assigned_user:assigned_user_id(id, name)"),
       supabase.from("rooms").select("id, status"),
@@ -214,61 +275,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     const rooms = (roomsRes.data as { id: string; status: string }[]) ?? [];
     const tours = (toursRes.data as Tour[]) ?? [];
 
-    const byStatus: Record<string, number> = {};
-    for (const l of leads) byStatus[l.status] = (byStatus[l.status] ?? 0) + 1;
-
-    const now = Date.now();
-    const overdueLeads = leads
-      .filter(
-        (l) =>
-          ["new", "awaiting_contact"].includes(l.status) &&
-          now - new Date(l.created_at).getTime() > 2 * 24 * 60 * 60 * 1000
-      )
-      .slice(0, 8);
-
-    const upcomingTours = tours
-      .filter((t) => t.scheduled_at && new Date(t.scheduled_at).getTime() >= now)
-      .sort(
-        (a, b) =>
-          new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime()
-      )
-      .slice(0, 6);
-
-    // 担当者別成績
-    const perfMap = new Map<string, { id: string; name: string; total: number; movedIn: number }>();
-    for (const l of leads) {
-      if (!l.assigned_user) continue;
-      const key = l.assigned_user.id;
-      const entry =
-        perfMap.get(key) ?? { id: key, name: l.assigned_user.name, total: 0, movedIn: 0 };
-      entry.total += 1;
-      if (l.status === "moved_in") entry.movedIn += 1;
-      perfMap.set(key, entry);
-    }
-    const staffPerformance = Array.from(perfMap.values()).sort((a, b) => b.total - a.total);
-
-    // ステータス遷移時刻（専用列。未設定の既存行は updated_at で近似）
-    const statusChangedMs = (l: Lead) => ts(l.status_changed_at ?? l.updated_at);
-
-    return {
-      total: leads.length,
-      byStatus,
-      newThisMonth: leads.filter((l) => ts(l.created_at) >= startMs).length,
-      movedInThisMonth: leads.filter(
-        (l) => l.status === "moved_in" && statusChangedMs(l) >= startMs
-      ).length,
-      lostThisMonth: leads.filter(
-        (l) => l.status === "lost" && statusChangedMs(l) >= startMs
-      ).length,
-      toursThisMonth: tours.filter(
-        (t) => t.scheduled_at && ts(t.scheduled_at) >= startMs
-      ).length,
-      vacantRooms: rooms.filter((r) => r.status === "vacant").length,
-      totalRooms: rooms.length,
-      upcomingTours,
-      overdueLeads,
-      staffPerformance,
-    };
+    return computeDashboardStats(leads, rooms, tours);
   }, {
     total: 0,
     byStatus: {},
