@@ -7,14 +7,14 @@ export function FacilityCard({ facility }: { facility: Facility }) {
   const vacant =
     facility.rooms?.filter((r) => r.status === "vacant").length ?? null;
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-      <div className="flex h-40 items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-lift">
+      <div className="flex h-40 items-center justify-center overflow-hidden bg-gradient-to-br from-brand-50 to-accent-50/60">
         {facility.photo_urls?.[0] ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={facility.photo_urls[0]}
             alt={facility.name}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <span className="text-sm font-semibold text-brand-400">

@@ -5,16 +5,18 @@ type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger" | "succe
 type Size = "sm" | "md" | "lg";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-brand-600 text-white hover:bg-brand-700 shadow-sm",
-  secondary: "bg-slate-100 text-ink hover:bg-slate-200",
-  outline: "border border-slate-300 bg-white text-ink hover:bg-slate-50",
-  ghost: "text-ink hover:bg-slate-100",
-  danger: "bg-red-600 text-white hover:bg-red-700",
-  success: "bg-emerald-600 text-white hover:bg-emerald-700",
+  primary:
+    "bg-brand-600 text-white shadow-soft hover:bg-brand-700 hover:shadow-lift active:scale-[0.98]",
+  secondary: "bg-slate-100 text-ink hover:bg-slate-200 active:scale-[0.98]",
+  outline:
+    "border border-slate-300 bg-white text-ink hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-700 active:scale-[0.98]",
+  ghost: "text-ink hover:bg-slate-100 active:scale-[0.98]",
+  danger: "bg-red-600 text-white shadow-soft hover:bg-red-700 active:scale-[0.98]",
+  success: "bg-emerald-600 text-white shadow-soft hover:bg-emerald-700 active:scale-[0.98]",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-9 px-3 text-sm",
+  sm: "h-9 px-3.5 text-sm",
   md: "h-11 px-5 text-base",
   lg: "h-14 px-8 text-lg",
 };
@@ -31,7 +33,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
           variants[variant],
           sizes[size],
           className

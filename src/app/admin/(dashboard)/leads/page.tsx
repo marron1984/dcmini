@@ -151,7 +151,7 @@ function LeadsTable({ leads }: { leads: Lead[] }) {
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
       <table className="w-full min-w-[760px] text-sm">
         <thead>
-          <tr className="border-b border-slate-200 text-left text-ink-muted">
+          <tr className="border-b border-slate-200 bg-slate-50/70 text-left text-xs uppercase tracking-wide text-ink-muted">
             <th className="px-4 py-3 font-semibold">相談者</th>
             <th className="px-4 py-3 font-semibold">入居予定者</th>
             <th className="px-4 py-3 font-semibold">状況</th>

@@ -9,14 +9,68 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   @apply bg-slate-50 text-ink antialiased;
   font-feature-settings: "palt";
+  text-rendering: optimizeLegibility;
+  letter-spacing: 0.01em;
 }
 
-/* セクション見出しの共通装飾 */
+/* 見出しは字間を少し詰めて引き締める */
+h1, h2, h3 {
+  letter-spacing: -0.01em;
+}
+
+/* セクション見出しのアイブロウ（小見出し） */
 .section-eyebrow {
-  @apply mb-2 text-sm font-bold tracking-wide text-brand-600;
+  @apply mb-3 inline-flex items-center gap-1.5 text-sm font-bold tracking-wide text-brand-600;
+}
+.section-eyebrow::before {
+  content: "";
+  @apply h-1 w-1 rounded-full bg-accent-500;
+}
+
+/* セクション見出し下のアクセント下線 */
+.heading-underline {
+  @apply relative inline-block;
+}
+.heading-underline::after {
+  content: "";
+  @apply absolute -bottom-2 left-1/2 h-1 w-12 -translate-x-1/2 rounded-full bg-gradient-to-r from-brand-500 to-accent-400;
+}
+
+/* スクロールバーを控えめに（対応ブラウザ） */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+/* 行数制限ユーティリティ（コラム一覧などで使用） */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* リンク・ボタンの全体的なトランジション */
+a,
+button {
+  transition-property: color, background-color, border-color, box-shadow,
+    transform, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }

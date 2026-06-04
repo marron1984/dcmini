@@ -30,12 +30,12 @@ export default async function DashboardPage() {
       : 0;
 
   const kpis = [
-    { label: "今月の新規相談", value: stats.newThisMonth, icon: Inbox, color: "text-brand-600 bg-brand-50" },
-    { label: "今月の見学", value: stats.toursThisMonth, icon: CalendarCheck, color: "text-amber-600 bg-amber-50" },
-    { label: "今月の入居", value: stats.movedInThisMonth, icon: Home, color: "text-emerald-600 bg-emerald-50" },
-    { label: "今月の失注", value: stats.lostThisMonth, icon: XCircle, color: "text-slate-600 bg-slate-100" },
-    { label: "空室数", value: stats.vacantRooms, icon: DoorOpen, color: "text-green-600 bg-green-50" },
-    { label: "稼働率", value: `${occupancy}%`, icon: TrendingUp, color: "text-brand-600 bg-brand-50" },
+    { label: "今月の新規相談", value: stats.newThisMonth, icon: Inbox, color: "from-brand-500 to-brand-700" },
+    { label: "今月の見学", value: stats.toursThisMonth, icon: CalendarCheck, color: "from-amber-400 to-orange-500" },
+    { label: "今月の入居", value: stats.movedInThisMonth, icon: Home, color: "from-emerald-500 to-teal-600" },
+    { label: "今月の失注", value: stats.lostThisMonth, icon: XCircle, color: "from-slate-400 to-slate-500" },
+    { label: "空室数", value: stats.vacantRooms, icon: DoorOpen, color: "from-green-500 to-emerald-600" },
+    { label: "稼働率", value: `${occupancy}%`, icon: TrendingUp, color: "from-brand-500 to-accent-500" },
   ];
 
   return (
@@ -45,14 +45,14 @@ export default async function DashboardPage() {
       {/* KPIカード */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         {kpis.map((k) => (
-          <Card key={k.label}>
+          <Card key={k.label} className="transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
             <CardContent className="flex items-center gap-4">
-              <span className={`flex h-12 w-12 items-center justify-center rounded-xl ${k.color}`}>
+              <span className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${k.color} text-white shadow-soft`}>
                 <k.icon className="h-6 w-6" />
               </span>
               <div>
                 <p className="text-sm text-ink-muted">{k.label}</p>
-                <p className="text-2xl font-bold text-ink">{k.value}</p>
+                <p className="text-2xl font-bold tracking-tight text-ink">{k.value}</p>
               </div>
             </CardContent>
           </Card>
@@ -74,7 +74,7 @@ export default async function DashboardPage() {
                   <span className="w-24 shrink-0 text-sm text-ink-soft">{s.label}</span>
                   <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100">
                     <div
-                      className="h-full rounded-full bg-brand-500"
+                      className="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent-400 transition-all"
                       style={{ width: `${pct}%` }}
                     />
                   </div>

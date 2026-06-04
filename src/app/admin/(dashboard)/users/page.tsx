@@ -37,7 +37,7 @@ export default async function UsersPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-ink-muted">
+                <tr className="border-b border-slate-200 bg-slate-50/70 text-left text-xs uppercase tracking-wide text-ink-muted">
                   <th className="px-4 py-3 font-semibold">スタッフ</th>
                   <th className="px-4 py-3 font-semibold">権限</th>
                   <th className="px-4 py-3 font-semibold">状態</th>

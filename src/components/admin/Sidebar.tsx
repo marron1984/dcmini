@@ -46,7 +46,7 @@ export function Sidebar({ user }: { user: AppUser }) {
     exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
 
   const nav = (
-    <nav className="flex flex-1 flex-col gap-1 px-3">
+    <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3">
       {NAV.map((item) => {
         const active = isActive(item.href, item.exact);
         return (
@@ -55,13 +55,21 @@ export function Sidebar({ user }: { user: AppUser }) {
             href={item.href}
             onClick={() => setOpen(false)}
             className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-3 text-base font-semibold transition-colors",
+              "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-semibold transition-all duration-150",
               active
-                ? "bg-brand-600 text-white"
-                : "text-slate-200 hover:bg-slate-700/60"
+                ? "bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-lift"
+                : "text-slate-300 hover:bg-white/5 hover:text-white"
             )}
           >
-            <item.icon className="h-5 w-5" />
+            {active && (
+              <span className="absolute -left-3 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-accent-400" />
+            )}
+            <item.icon
+              className={cn(
+                "h-5 w-5 shrink-0 transition-transform",
+                active ? "scale-105" : "text-slate-400 group-hover:text-white"
+              )}
+            />
             {item.label}
           </Link>
         );
@@ -89,16 +97,16 @@ export function Sidebar({ user }: { user: AppUser }) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-slate-800 py-5 transition-transform lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-gradient-to-b from-slate-900 to-slate-800 py-5 shadow-xl transition-transform lg:static lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex items-center justify-between px-5 pb-5">
-          <Link href="/admin" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
+          <Link href="/admin" className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-sm font-bold text-white shadow-soft">
               DC
             </span>
-            <span className="text-sm font-bold text-white">{SITE_NAME}</span>
+            <span className="text-sm font-bold tracking-tight text-white">{SITE_NAME}</span>
           </Link>
           <button
             className="text-slate-300 lg:hidden"
@@ -111,13 +119,20 @@ export function Sidebar({ user }: { user: AppUser }) {
 
         {nav}
 
-        <div className="mt-auto border-t border-slate-700 px-5 pt-4">
-          <p className="text-sm font-semibold text-white">{user.name}</p>
-          <p className="text-xs text-slate-400">{USER_ROLE_MAP[user.role]}</p>
+        <div className="mt-auto mx-3 mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-accent-500 text-xs font-bold text-white">
+              {user.name.slice(0, 1)}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-white">{user.name}</p>
+              <p className="text-xs text-slate-400">{USER_ROLE_MAP[user.role]}</p>
+            </div>
+          </div>
           <form action={signOut} className="mt-3">
             <button
               type="submit"
-              className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white"
+              className="flex w-full items-center gap-2 rounded-lg px-1 text-sm font-semibold text-slate-300 transition-colors hover:text-white"
             >
               <LogOut className="h-4 w-4" />
               ログアウト

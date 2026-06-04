@@ -112,7 +112,7 @@ export function AdReportManager({ reports }: { reports: AdReport[] }) {
         <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
           <table className="w-full min-w-[900px] text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-ink-muted">
+              <tr className="border-b border-slate-200 bg-slate-50/70 text-left text-xs uppercase tracking-wide text-ink-muted">
                 <th className="px-3 py-3 font-semibold">日付</th>
                 <th className="px-3 py-3 font-semibold">キャンペーン</th>
                 <th className="px-3 py-3 font-semibold">KW</th>

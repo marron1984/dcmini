@@ -33,7 +33,7 @@ export default async function ArticlesPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[680px] text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-left text-ink-muted">
+                  <tr className="border-b border-slate-200 bg-slate-50/70 text-left text-xs uppercase tracking-wide text-ink-muted">
                     <th className="px-4 py-3 font-semibold">タイトル</th>
                     <th className="px-4 py-3 font-semibold">カテゴリ</th>
                     <th className="px-4 py-3 font-semibold">状態</th>

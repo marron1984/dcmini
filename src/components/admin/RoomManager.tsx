@@ -82,7 +82,7 @@ export function RoomManager({
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full min-w-[520px] text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-ink-muted">
+              <tr className="border-b border-slate-200 bg-slate-50/70 text-left text-xs uppercase tracking-wide text-ink-muted">
                 <th className="px-4 py-2.5 font-semibold">部屋番号</th>
                 <th className="px-4 py-2.5 font-semibold">階</th>
                 <th className="px-4 py-2.5 font-semibold">家賃</th>
