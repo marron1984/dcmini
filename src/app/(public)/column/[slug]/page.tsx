@@ -4,6 +4,8 @@ import { ArrowLeft, Phone, MessageCircle } from "lucide-react";
 import { getPublishedArticle, getPublishedArticleSlugs } from "@/lib/data/public";
 import { getSiteSettings } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
+import { JsonLd } from "@/components/JsonLd";
+import { SITE_NAME } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 
 export const dynamicParams = true;
@@ -34,8 +36,20 @@ export default async function ArticlePage({
   const tel = settings.phone_number.replace(/[^0-9]/g, "");
   const paragraphs = (article.body ?? "").split(/\n{2,}/).filter(Boolean);
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: article.title,
+    description: article.excerpt ?? undefined,
+    image: article.cover_image_url ?? undefined,
+    datePublished: article.published_at ?? article.created_at,
+    dateModified: article.updated_at,
+    publisher: { "@type": "Organization", name: SITE_NAME },
+  };
+
   return (
     <article className="mx-auto max-w-3xl px-4 py-12">
+      <JsonLd data={articleJsonLd} />
       <Link href="/column" className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-ink">
         <ArrowLeft className="h-4 w-4" /> コラム一覧へ戻る
       </Link>

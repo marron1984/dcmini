@@ -4,6 +4,7 @@ import { Phone, MessageCircle, Check } from "lucide-react";
 import { getPublishedLp, getPublishedLpSlugs } from "@/lib/data/public";
 import { getSiteSettings } from "@/lib/auth";
 import { ContactForm } from "@/components/public/ContactForm";
+import { JsonLd } from "@/components/JsonLd";
 
 // 第2フェーズ: DB(lp_pages)から動的に生成するGoogle広告用LP
 export const dynamicParams = true;
@@ -43,8 +44,22 @@ export default async function DynamicLpPage({
   const audience = toLines(lp.target_audience);
   const problems = toLines(lp.problems);
 
+  const faqJsonLd =
+    lp.faq.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: lp.faq.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }
+      : null;
+
   return (
     <>
+      {faqJsonLd && <JsonLd data={faqJsonLd} />}
       <section className="bg-gradient-to-b from-brand-50 to-white px-4 py-14">
         <div className="mx-auto max-w-3xl text-center">
           {lp.target_keyword && (

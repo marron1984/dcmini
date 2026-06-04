@@ -18,12 +18,13 @@ import {
   HeartHandshake,
   Wallet,
 } from "lucide-react";
-import { CONCERN_CATEGORIES, SITE_NAME } from "@/lib/constants";
+import { CONCERN_CATEGORIES, SITE_NAME, HOME_FAQ } from "@/lib/constants";
 import { getSiteSettings } from "@/lib/auth";
 import { getPublishedFacilities } from "@/lib/data/public";
 import { ContactForm } from "@/components/public/ContactForm";
 import { FacilityCard } from "@/components/public/FacilityCard";
 import { Faq } from "@/components/public/Faq";
+import { JsonLd } from "@/components/JsonLd";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Brain,
@@ -41,8 +42,19 @@ export default async function HomePage() {
   const facilities = await getPublishedFacilities();
   const tel = settings.phone_number.replace(/[^0-9]/g, "");
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: HOME_FAQ.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <>
+      <JsonLd data={faqJsonLd} />
       {/* 1. ファーストビュー */}
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 via-white to-white">
         {/* 装飾: 背景のグラデーションブロブとドットグリッド */}
