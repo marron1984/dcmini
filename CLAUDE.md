@@ -79,6 +79,7 @@ supabase/seed.sql     デモデータ
 - `NEXT_PUBLIC_SITE_URL`（OGP/sitemap/JSON-LD）
 - `NEXT_PUBLIC_PHONE_NUMBER` / `NEXT_PUBLIC_LINE_URL`（DB site_settings が優先）
 - `NEXT_PUBLIC_GA_ID` / `NEXT_PUBLIC_GTM_ID` / `NEXT_PUBLIC_GOOGLE_ADS_ID`
+- `ANTHROPIC_API_KEY`（AI機能。サーバー専用・未設定なら自動無効化）
 
 ## セットアップ
 
@@ -96,5 +97,7 @@ supabase/seed.sql     デモデータ
 
 ## 既知の検討事項
 
-- CSP は未導入（GTM/Supabase許可の設計が必要）。
-- 第3フェーズ（LINE/Google広告API/AI/LINE WORKS）は外部APIキーが前提で未実装。
+- CSPは Report-Only で導入済み（`next.config.mjs`）。安定後に強制へ。
+- 第3フェーズのうち **AI（Anthropic Claude）連携は実装済み**（`src/lib/ai.ts` / `src/lib/ai-prompts.ts` /
+  `src/app/admin/ai-actions.ts`、案件詳細の「AIアシスト」タブ）。`ANTHROPIC_API_KEY` 設定で有効化。
+- 残るLINE/Google広告API/LINE WORKSは外部APIキー・アカウントが前提で未実装。

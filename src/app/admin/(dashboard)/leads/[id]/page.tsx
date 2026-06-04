@@ -15,7 +15,9 @@ import { TourForm } from "@/components/admin/TourForm";
 import { TourResultBadge } from "@/components/admin/StatusBadge";
 import { ReferrerSelect } from "@/components/admin/leads/ReferrerSelect";
 import { MatchList } from "@/components/admin/leads/MatchList";
+import { AiAssist } from "@/components/admin/leads/AiAssist";
 import { matchFacilities, scoreColor } from "@/lib/matching";
+import { isAiEnabled } from "@/lib/ai";
 import { checkSectionAccess } from "@/lib/guard";
 import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 import {
@@ -212,6 +214,11 @@ export default async function LeadDetailPage({
                     id: "matching",
                     label: "施設マッチング",
                     content: <MatchList leadId={lead.id} matches={matches} />,
+                  },
+                  {
+                    id: "ai",
+                    label: "AIアシスト",
+                    content: <AiAssist leadId={lead.id} enabled={isAiEnabled()} />,
                   },
                   {
                     id: "edit",

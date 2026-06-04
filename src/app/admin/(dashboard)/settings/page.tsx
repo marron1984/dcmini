@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { SettingsForm } from "@/components/admin/SettingsForm";
 import { getCurrentUser, getSiteSettings } from "@/lib/auth";
+import { isAiEnabled } from "@/lib/ai";
 
 export default async function SettingsPage() {
   const me = await getCurrentUser();
@@ -23,6 +24,7 @@ export default async function SettingsPage() {
   }
 
   const settings = await getSiteSettings();
+  const aiEnabled = isAiEnabled();
 
   return (
     <>
@@ -45,20 +47,26 @@ export default async function SettingsPage() {
             今後の外部連携（準備中）
           </h2>
           <p className="mt-1 text-sm text-ink-muted">
-            以下はAPIキー・アカウント連携が必要なため、認証情報の登録後に有効化します。
+            以下はAPIキー・アカウント連携が必要です。認証情報は環境変数で設定します。
           </p>
           <ul className="mt-4 space-y-2 text-sm text-ink-soft">
             {[
-              "LINE公式アカウント（自動応答・追客・見学リマインド）",
-              "Google広告 API（広告レポート自動取込）",
-              "AIヒアリング要約・施設マッチング（LLM連携）",
-              "LINE WORKS 通知",
+              { label: "AI（相談要約・施設選定・家族/ケアマネ向け文面生成）", connected: aiEnabled },
+              { label: "LINE公式アカウント（自動応答・追客・見学リマインド）", connected: false },
+              { label: "Google広告 API（広告レポート自動取込）", connected: false },
+              { label: "LINE WORKS 通知", connected: false },
             ].map((t) => (
-              <li key={t} className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-                {t}
-                <span className="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
-                  未接続
+              <li key={t.label} className="flex items-center gap-2">
+                <span className={`h-1.5 w-1.5 rounded-full ${t.connected ? "bg-emerald-500" : "bg-slate-300"}`} />
+                {t.label}
+                <span
+                  className={`ml-1 rounded-full px-2 py-0.5 text-xs ${
+                    t.connected
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  {t.connected ? "接続済み" : "未接続"}
                 </span>
               </li>
             ))}
