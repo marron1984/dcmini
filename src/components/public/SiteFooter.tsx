@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { SITE_NAME } from "@/lib/constants";
 
-export function SiteFooter({ phone }: { phone: string }) {
+export function SiteFooter({
+  phone,
+  businessHours = "9:00〜18:00",
+}: {
+  phone: string;
+  businessHours?: string;
+}) {
   return (
     <footer className="border-t border-slate-200 bg-white">
       <div className="mx-auto max-w-6xl px-4 py-10">
@@ -20,7 +26,7 @@ export function SiteFooter({ phone }: { phone: string }) {
           <div className="text-sm text-ink-soft">
             <p className="font-bold">お電話でのご相談</p>
             <p className="mt-1 text-2xl font-bold text-brand-700">{phone}</p>
-            <p className="mt-1 text-ink-muted">受付時間 9:00〜18:00</p>
+            <p className="mt-1 text-ink-muted">受付時間 {businessHours}</p>
           </div>
         </div>
         <div className="mt-8 flex flex-col gap-2 border-t border-slate-100 pt-6 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between">

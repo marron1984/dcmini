@@ -1,11 +1,19 @@
 import Script from "next/script";
 
 // Google Analytics / GTM / Google広告 タグ設置エリア（24. MVP: タグ設置用エリア）
-// 環境変数が設定されている場合のみ出力する。
-export function Analytics() {
-  const ga = process.env.NEXT_PUBLIC_GA_ID;
-  const gtm = process.env.NEXT_PUBLIC_GTM_ID;
-  const ads = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+// 計測IDは管理画面の「連携設定」(site_settings) → 環境変数の順で解決する。
+export function Analytics({
+  gaId,
+  gtmId,
+  adsId,
+}: {
+  gaId?: string;
+  gtmId?: string;
+  adsId?: string;
+}) {
+  const ga = gaId || process.env.NEXT_PUBLIC_GA_ID;
+  const gtm = gtmId || process.env.NEXT_PUBLIC_GTM_ID;
+  const ads = adsId || process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
 
   return (
     <>

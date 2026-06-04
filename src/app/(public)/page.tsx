@@ -117,7 +117,7 @@ export default async function HomePage() {
               >
                 {settings.phone_number}
               </a>
-              <p className="mt-1 text-sm text-ink-muted">受付時間 9:00〜18:00</p>
+              <p className="mt-1 text-sm text-ink-muted">受付時間 {settings.business_hours}</p>
               <div className="mt-6 space-y-3 border-t border-slate-100 pt-6 text-sm text-ink-soft">
                 {[
                   "ご希望やご事情をお伺いします",

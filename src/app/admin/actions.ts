@@ -605,3 +605,33 @@ export async function toggleUserActive(userId: string, isActive: boolean) {
   revalidatePath("/admin/users");
   return { ok: true };
 }
+
+// ---- サイト設定 / 外部連携設定（6・3 / admin専用）----
+export async function updateSiteSettings(formData: FormData) {
+  await assertAdmin();
+  const supabase = createClient();
+
+  const keys = [
+    "phone_number",
+    "line_url",
+    "business_hours",
+    "ga_id",
+    "gtm_id",
+    "google_ads_id",
+  ];
+
+  const rows = keys.map((key) => ({
+    key,
+    value: ((formData.get(key) as string) ?? "").trim(),
+    updated_at: new Date().toISOString(),
+  }));
+
+  const { error } = await supabase.from("site_settings").upsert(rows, { onConflict: "key" });
+  if (error) return { ok: false, error: error.message };
+
+  await logAction("settings.update", { entity: "site_settings" });
+  // 公開サイト全体に影響するため広くrevalidate
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  return { ok: true };
+}

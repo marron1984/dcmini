@@ -30,15 +30,25 @@ export async function getCurrentUser(): Promise<AppUser | null> {
 }
 
 // サイト設定（電話番号・LINE URL）を取得。DB未設定時は環境変数 → 既定値の順。
-export async function getSiteSettings(): Promise<{
+export interface SiteSettings {
   phone_number: string;
   line_url: string;
-}> {
-  const fallback = {
+  business_hours: string;
+  ga_id: string;
+  gtm_id: string;
+  google_ads_id: string;
+}
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  const fallback: SiteSettings = {
     phone_number: process.env.NEXT_PUBLIC_PHONE_NUMBER ?? "0120-000-000",
     line_url:
       process.env.NEXT_PUBLIC_LINE_URL ??
       "https://line.me/R/ti/p/@your-line-id",
+    business_hours: "9:00〜18:00",
+    ga_id: process.env.NEXT_PUBLIC_GA_ID ?? "",
+    gtm_id: process.env.NEXT_PUBLIC_GTM_ID ?? "",
+    google_ads_id: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ?? "",
   };
   try {
     const supabase = createClient();
@@ -48,6 +58,10 @@ export async function getSiteSettings(): Promise<{
     return {
       phone_number: map.phone_number || fallback.phone_number,
       line_url: map.line_url || fallback.line_url,
+      business_hours: map.business_hours || fallback.business_hours,
+      ga_id: map.ga_id ?? fallback.ga_id,
+      gtm_id: map.gtm_id ?? fallback.gtm_id,
+      google_ads_id: map.google_ads_id ?? fallback.google_ads_id,
     };
   } catch {
     return fallback;

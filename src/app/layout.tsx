@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Analytics } from "@/components/Analytics";
 import { SITE_NAME, SITE_DESCRIPTION } from "@/lib/constants";
+import { getSiteSettings } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: {
@@ -17,16 +18,21 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getSiteSettings();
   return (
     <html lang="ja">
       <body>
         {children}
-        <Analytics />
+        <Analytics
+          gaId={settings.ga_id}
+          gtmId={settings.gtm_id}
+          adsId={settings.google_ads_id}
+        />
       </body>
     </html>
   );

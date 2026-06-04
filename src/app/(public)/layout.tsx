@@ -12,7 +12,7 @@ export default async function PublicLayout({
     <div className="flex min-h-screen flex-col">
       <SiteHeader phone={settings.phone_number} lineUrl={settings.line_url} />
       <main className="flex-1">{children}</main>
-      <SiteFooter phone={settings.phone_number} />
+      <SiteFooter phone={settings.phone_number} businessHours={settings.business_hours} />
     </div>
   );
 }
