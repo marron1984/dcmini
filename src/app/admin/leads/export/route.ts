@@ -2,17 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getLeads, type LeadFilters } from "@/lib/data/admin";
 import { LEAD_STATUS_MAP } from "@/lib/constants";
+import { buildCsv, ynLabel as yn } from "@/lib/csv";
 
 // 第2フェーズ: 案件のCSV出力（一覧の絞り込み条件を引き継ぐ）
-function csvCell(v: unknown): string {
-  if (v === null || v === undefined) return "";
-  const s = String(v);
-  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
-
-const yn = (v: boolean | null) => (v === true ? "あり" : v === false ? "なし" : "");
-
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
@@ -67,9 +59,7 @@ export async function GET(request: NextRequest) {
     l.note,
   ]);
 
-  const body =
-    "﻿" + // Excel向けBOM
-    [headers, ...rows].map((r) => r.map(csvCell).join(",")).join("\r\n");
+  const body = buildCsv(headers, rows);
 
   const filename = `leads_${new Date().toISOString().slice(0, 10)}.csv`;
 

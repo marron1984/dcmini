@@ -104,10 +104,20 @@ update users set role = 'admin' where email = 'you@example.com';
 ### 4. 起動
 
 ```bash
-npm run dev      # 開発
-npm run build    # 本番ビルド
-npm run start    # 本番起動
+npm run dev        # 開発
+npm run build      # 本番ビルド
+npm run start      # 本番起動
+npm run lint       # ESLint
+npm run typecheck  # 型チェック（tsc --noEmit）
+npm test           # ユニットテスト（Vitest）
 ```
+
+### テスト / CI
+
+- ユニットテストは **Vitest**。純粋ロジック（`src/lib/csv.ts` / `src/lib/utils.ts` /
+  `src/lib/matching.ts`）を対象に `src/lib/__tests__/` に配置。
+- GitHub Actions（`.github/workflows/ci.yml`）が push / PR ごとに
+  **lint → typecheck → test → build** を実行します。
 
 > Supabase 未設定でもUI確認用にビルド・起動は可能です（データ取得は空にフォールバック）。
 
