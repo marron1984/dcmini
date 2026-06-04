@@ -118,6 +118,15 @@ describe("scoreFacility", () => {
     const result = scoreFacility(lead, facility);
     const budgetReason = result.reasons.find((r) => r.label.includes("予算"));
     expect(budgetReason?.ok).toBe(false);
+    expect(budgetReason?.level).toBe("ng");
+  });
+
+  it("予算の110%以内は部分適合(partial)として扱う", () => {
+    const lead = makeLead({ budget: 100000 });
+    const facility = makeFacility({ monthly_fee: 105000 });
+    const result = scoreFacility(lead, facility);
+    const budgetReason = result.reasons.find((r) => r.label.includes("予算"));
+    expect(budgetReason?.level).toBe("partial");
   });
 
   it("要介護度が対応上限を超えるとNG", () => {

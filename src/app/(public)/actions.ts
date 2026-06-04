@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseLooseInt } from "@/lib/utils";
 
 export interface ContactFormResult {
   ok: boolean;
@@ -29,12 +30,8 @@ export async function submitContact(
     };
   }
 
-  const num = (k: string): number | null => {
-    const v = (formData.get(k) as string)?.trim();
-    if (!v) return null;
-    const n = Number(v.replace(/[^0-9]/g, ""));
-    return Number.isNaN(n) ? null : n;
-  };
+  const num = (k: string): number | null =>
+    parseLooseInt(formData.get(k) as string);
   const bool = (k: string): boolean | null => {
     const v = formData.get(k) as string;
     if (v === "yes") return true;

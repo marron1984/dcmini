@@ -5,6 +5,20 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// 全角数字や「円」「,」などの混在を許容して整数を取り出す。
+// （例:「１３００」「1,300円」→ 1300 / 空・数字なし → null）
+export function parseLooseInt(value: string | null | undefined): number | null {
+  if (value == null) return null;
+  const half = value.replace(/[０-９]/g, (c) =>
+    String.fromCharCode(c.charCodeAt(0) - 0xfee0)
+  );
+  const digits = half.replace(/[^0-9]/g, "");
+  if (!digits) return null;
+  const n = Number(digits);
+  return Number.isNaN(n) ? null : n;
+}
+
+
 export function formatDate(value?: string | null): string {
   if (!value) return "—";
   const d = new Date(value);

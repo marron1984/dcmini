@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cn, formatYen, formatDate, relativeTime } from "@/lib/utils";
+import { cn, formatYen, formatDate, relativeTime, parseLooseInt } from "@/lib/utils";
 
 describe("cn", () => {
   it("クラスを結合し、後勝ちでTailwind競合を解決する", () => {
@@ -27,6 +27,25 @@ describe("formatDate", () => {
   });
   it("ISO文字列を日付に整形する", () => {
     expect(formatDate("2026-06-04T00:00:00.000Z")).toContain("2026");
+  });
+});
+
+describe("parseLooseInt", () => {
+  it("通常の数値文字列を整数化", () => {
+    expect(parseLooseInt("130000")).toBe(130000);
+  });
+  it("全角数字を半角に正規化して解釈", () => {
+    expect(parseLooseInt("１３００")).toBe(1300);
+  });
+  it("カンマや単位を含んでも数字を抽出", () => {
+    expect(parseLooseInt("1,300円")).toBe(1300);
+    expect(parseLooseInt("85歳")).toBe(85);
+  });
+  it("空・数字なし・nullはnull", () => {
+    expect(parseLooseInt("")).toBeNull();
+    expect(parseLooseInt("なし")).toBeNull();
+    expect(parseLooseInt(null)).toBeNull();
+    expect(parseLooseInt(undefined)).toBeNull();
   });
 });
 

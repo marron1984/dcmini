@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
+import { parseLooseInt } from "@/lib/utils";
 import type { LeadStatus, RoomStatus, TourResult } from "@/lib/types";
 
 // 編集権限チェック（admin / consultant のみ書き込み可）
@@ -86,12 +87,7 @@ export async function updateLeadFields(leadId: string, formData: FormData) {
     const v = (formData.get(k) as string)?.trim();
     return v ? v : null;
   };
-  const num = (k: string) => {
-    const v = (formData.get(k) as string)?.trim();
-    if (!v) return null;
-    const n = Number(v.replace(/[^0-9]/g, ""));
-    return Number.isNaN(n) ? null : n;
-  };
+  const num = (k: string) => parseLooseInt(formData.get(k) as string);
   const bool = (k: string) => {
     const v = formData.get(k) as string;
     if (v === "yes") return true;
@@ -203,12 +199,7 @@ export async function upsertFacility(formData: FormData) {
     const v = (formData.get(k) as string)?.trim();
     return v ? v : null;
   };
-  const num = (k: string) => {
-    const v = (formData.get(k) as string)?.trim();
-    if (!v) return null;
-    const n = Number(v.replace(/[^0-9]/g, ""));
-    return Number.isNaN(n) ? null : n;
-  };
+  const num = (k: string) => parseLooseInt(formData.get(k) as string);
 
   const record = {
     name: str("name") ?? "",
@@ -251,12 +242,7 @@ export async function upsertRoom(formData: FormData) {
   const id = (formData.get("id") as string) || null;
   const facilityId = formData.get("facility_id") as string;
 
-  const num = (k: string) => {
-    const v = (formData.get(k) as string)?.trim();
-    if (!v) return null;
-    const n = Number(v.replace(/[^0-9]/g, ""));
-    return Number.isNaN(n) ? null : n;
-  };
+  const num = (k: string) => parseLooseInt(formData.get(k) as string);
   const str = (k: string) => {
     const v = (formData.get(k) as string)?.trim();
     return v ? v : null;

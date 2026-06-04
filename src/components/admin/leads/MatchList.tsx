@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, X, Plus } from "lucide-react";
+import { Check, X, AlertTriangle, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { addProposal } from "@/app/admin/actions";
 import { formatYen, cn } from "@/lib/utils";
+
+type ReasonLevel = "ok" | "partial" | "ng";
 
 export interface MatchItem {
   facilityId: string;
@@ -15,8 +17,14 @@ export interface MatchItem {
   monthlyFee: number | null;
   score: number;
   scoreColor: string;
-  reasons: { label: string; ok: boolean }[];
+  reasons: { label: string; level: ReasonLevel }[];
 }
+
+const REASON_STYLE: Record<ReasonLevel, string> = {
+  ok: "bg-emerald-50 text-emerald-700",
+  partial: "bg-amber-50 text-amber-700",
+  ng: "bg-red-50 text-red-600",
+};
 
 export function MatchList({
   leadId,
@@ -76,10 +84,16 @@ function MatchCard({ leadId, match }: { leadId: string; match: MatchItem }) {
             key={i}
             className={cn(
               "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
-              r.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+              REASON_STYLE[r.level]
             )}
           >
-            {r.ok ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+            {r.level === "ok" ? (
+              <Check className="h-3 w-3" />
+            ) : r.level === "partial" ? (
+              <AlertTriangle className="h-3 w-3" />
+            ) : (
+              <X className="h-3 w-3" />
+            )}
             {r.label}
           </span>
         ))}

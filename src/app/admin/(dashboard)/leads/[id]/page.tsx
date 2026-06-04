@@ -74,7 +74,7 @@ export default async function LeadDetailPage({
       monthlyFee: m.facility.monthly_fee,
       score: m.score,
       scoreColor: scoreColor(m.score),
-      reasons: m.reasons.map((r) => ({ label: r.label, ok: r.ok })),
+      reasons: m.reasons.map((r) => ({ label: r.label, level: r.level })),
     }));
 
   return (

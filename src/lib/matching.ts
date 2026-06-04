@@ -10,6 +10,8 @@ import type { Lead, Facility } from "@/lib/types";
 export interface MatchReason {
   label: string;
   ok: boolean;
+  // ok=適合 / partial=部分適合（例: 予算やや超過） / ng=不適合
+  level: "ok" | "partial" | "ng";
   weight: number;
 }
 
@@ -42,7 +44,7 @@ export function scoreFacility(lead: Lead, facility: Facility): FacilityMatch {
     if (!applicable) return;
     total += weight;
     if (ok) earned += weight;
-    reasons.push({ label, ok, weight });
+    reasons.push({ label, ok, level: ok ? "ok" : "ng", weight });
   };
 
   // 生活保護（必須要件に近い: 重み大）
@@ -53,7 +55,7 @@ export function scoreFacility(lead: Lead, facility: Facility): FacilityMatch {
     20
   );
 
-  // 予算
+  // 予算（やや超過は部分適合として扱い、表示とスコアを一致させる）
   if (lead.budget && facility.monthly_fee) {
     const ok = facility.monthly_fee <= lead.budget;
     const close = facility.monthly_fee <= lead.budget * 1.1;
@@ -62,6 +64,7 @@ export function scoreFacility(lead: Lead, facility: Facility): FacilityMatch {
     reasons.push({
       label: ok ? "予算内の月額費用" : close ? "予算をやや超過" : "予算を超過",
       ok,
+      level: ok ? "ok" : close ? "partial" : "ng",
       weight: 25,
     });
   }
@@ -95,6 +98,7 @@ export function scoreFacility(lead: Lead, facility: Facility): FacilityMatch {
       reasons.push({
         label: ok ? "要介護度に対応可能" : "要介護度が対応上限超",
         ok,
+        level: ok ? "ok" : "ng",
         weight: 15,
       });
     }
@@ -105,14 +109,14 @@ export function scoreFacility(lead: Lead, facility: Facility): FacilityMatch {
     const ok = areaMatches(lead.desired_area, facility.area, facility.address);
     total += 15;
     earned += ok ? 15 : 0;
-    reasons.push({ label: ok ? "希望エリアに合致" : "希望エリア外", ok, weight: 15 });
+    reasons.push({ label: ok ? "希望エリアに合致" : "希望エリア外", ok, level: ok ? "ok" : "ng", weight: 15 });
   }
 
   // 空室
   const vacant = facility.rooms?.some((r) => r.status === "vacant") ?? false;
   total += 10;
   earned += vacant ? 10 : 0;
-  reasons.push({ label: vacant ? "空室あり" : "空室なし", ok: vacant, weight: 10 });
+  reasons.push({ label: vacant ? "空室あり" : "空室なし", ok: vacant, level: vacant ? "ok" : "ng", weight: 10 });
 
   const score = total > 0 ? Math.round((earned / total) * 100) : 0;
   // 重要度順（不適合を上に出して注意喚起）
