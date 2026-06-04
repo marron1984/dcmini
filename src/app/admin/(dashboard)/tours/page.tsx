@@ -1,8 +1,13 @@
 import { PageHeader } from "@/components/admin/PageHeader";
 import { ToursManager } from "@/components/admin/ToursManager";
 import { getTours, getLeads, getFacilities, getStaffUsers } from "@/lib/data/admin";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 
 export default async function ToursPage() {
+  const { ok } = await checkSectionAccess("tours");
+  if (!ok) return <ForbiddenCard />;
+
   const [tours, leads, facilities, staff] = await Promise.all([
     getTours(),
     getLeads(),

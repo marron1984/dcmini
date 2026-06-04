@@ -5,12 +5,17 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReferrerForm } from "@/components/admin/ReferrerForm";
 import { getReferrer } from "@/lib/data/admin";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 
 export default async function ReferrerDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
+  const { ok } = await checkSectionAccess("referrers");
+  if (!ok) return <ForbiddenCard />;
+
   const referrer = await getReferrer(params.id);
   if (!referrer) notFound();
 

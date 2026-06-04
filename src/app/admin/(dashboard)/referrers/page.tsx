@@ -7,10 +7,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getReferrersWithStats } from "@/lib/data/admin";
 import { REFERRER_TYPES } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 
 const TYPE_LABEL = Object.fromEntries(REFERRER_TYPES.map((t) => [t.value, t.label]));
 
 export default async function ReferrersPage() {
+  const { ok } = await checkSectionAccess("referrers");
+  if (!ok) return <ForbiddenCard />;
+
   const referrers = await getReferrersWithStats();
 
   return (

@@ -3,8 +3,12 @@ import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArticleForm } from "@/components/admin/ArticleForm";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 
-export default function NewArticlePage() {
+export default async function NewArticlePage() {
+  const { ok } = await checkSectionAccess("articles");
+  if (!ok) return <ForbiddenCard />;
   return (
     <>
       <Link href="/admin/articles" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-ink">

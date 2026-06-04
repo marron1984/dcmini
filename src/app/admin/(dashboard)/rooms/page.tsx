@@ -6,8 +6,13 @@ import { RoomStatusSelect } from "@/components/admin/RoomStatusSelect";
 import { getRooms } from "@/lib/data/admin";
 import { ROOM_STATUSES } from "@/lib/constants";
 import { formatYen } from "@/lib/utils";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 
 export default async function RoomsPage() {
+  const { ok } = await checkSectionAccess("rooms");
+  if (!ok) return <ForbiddenCard />;
+
   const rooms = await getRooms();
 
   const counts = ROOM_STATUSES.map((s) => ({

@@ -7,8 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DeleteArticleButton } from "@/components/admin/DeleteArticleButton";
 import { getArticles } from "@/lib/data/admin";
 import { formatDate } from "@/lib/utils";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 
 export default async function ArticlesPage() {
+  const { ok } = await checkSectionAccess("articles");
+  if (!ok) return <ForbiddenCard />;
+
   const articles = await getArticles();
 
   return (

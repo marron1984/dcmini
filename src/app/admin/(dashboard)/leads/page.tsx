@@ -14,12 +14,17 @@ import {
 import { formatDate, relativeTime } from "@/lib/utils";
 import type { Lead } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 
 export default async function LeadsPage({
   searchParams,
 }: {
   searchParams: { [key: string]: string | undefined };
 }) {
+  const { ok } = await checkSectionAccess("leads");
+  if (!ok) return <ForbiddenCard />;
+
   const view = searchParams.view === "kanban" ? "kanban" : "table";
   const filters: LeadFilters = {
     q: searchParams.q,

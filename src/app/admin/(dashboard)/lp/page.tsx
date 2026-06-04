@@ -7,8 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DeleteLpButton } from "@/components/admin/DeleteLpButton";
 import { getLpPages } from "@/lib/data/admin";
 import { formatDate } from "@/lib/utils";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 
 export default async function LpListPage() {
+  const { ok } = await checkSectionAccess("lp");
+  if (!ok) return <ForbiddenCard />;
+
   const pages = await getLpPages();
 
   return (

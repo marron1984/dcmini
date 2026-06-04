@@ -16,6 +16,8 @@ import { TourResultBadge } from "@/components/admin/StatusBadge";
 import { ReferrerSelect } from "@/components/admin/leads/ReferrerSelect";
 import { MatchList } from "@/components/admin/leads/MatchList";
 import { matchFacilities, scoreColor } from "@/lib/matching";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 import {
   getLead,
   getLeadActivities,
@@ -44,6 +46,9 @@ export default async function LeadDetailPage({
 }: {
   params: { id: string };
 }) {
+  const { ok } = await checkSectionAccess("leads");
+  if (!ok) return <ForbiddenCard />;
+
   const lead = await getLead(params.id);
   if (!lead) notFound();
 

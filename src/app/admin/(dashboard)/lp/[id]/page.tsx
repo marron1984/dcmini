@@ -5,12 +5,17 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { LpForm } from "@/components/admin/LpForm";
 import { getLpPage } from "@/lib/data/admin";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 
 export default async function LpDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
+  const { ok } = await checkSectionAccess("lp");
+  if (!ok) return <ForbiddenCard />;
+
   const lp = await getLpPage(params.id);
   if (!lp) notFound();
 

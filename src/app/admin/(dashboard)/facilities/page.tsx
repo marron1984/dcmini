@@ -5,8 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getFacilities } from "@/lib/data/admin";
 import { formatYen } from "@/lib/utils";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 
 export default async function FacilitiesPage() {
+  const { ok } = await checkSectionAccess("facilities");
+  if (!ok) return <ForbiddenCard />;
+
   const facilities = await getFacilities();
 
   return (

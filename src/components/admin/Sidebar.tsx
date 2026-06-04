@@ -22,34 +22,43 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SITE_NAME, USER_ROLE_MAP } from "@/lib/constants";
+import { canAccess, type Section } from "@/lib/permissions";
 import type { AppUser } from "@/lib/types";
 import { signOut } from "@/app/admin/actions";
 
-const NAV = [
-  { href: "/admin", label: "ダッシュボード", icon: LayoutDashboard, exact: true },
-  { href: "/admin/leads", label: "案件管理", icon: Users },
-  { href: "/admin/facilities", label: "施設管理", icon: Building2 },
-  { href: "/admin/rooms", label: "部屋・空室管理", icon: DoorOpen },
-  { href: "/admin/tours", label: "見学管理", icon: CalendarCheck },
-  { href: "/admin/referrers", label: "紹介元管理", icon: Handshake },
-  { href: "/admin/ads", label: "広告管理", icon: Megaphone },
-  { href: "/admin/lp", label: "LP管理", icon: FileText },
-  { href: "/admin/articles", label: "記事CMS", icon: Newspaper },
-  { href: "/admin/users", label: "ユーザー管理", icon: UserCog },
-  { href: "/admin/settings", label: "連携設定", icon: Settings },
-  { href: "/admin/logs", label: "操作ログ", icon: ScrollText },
+const NAV: {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  section: Section;
+  exact?: boolean;
+}[] = [
+  { href: "/admin", label: "ダッシュボード", icon: LayoutDashboard, section: "dashboard", exact: true },
+  { href: "/admin/leads", label: "案件管理", icon: Users, section: "leads" },
+  { href: "/admin/facilities", label: "施設管理", icon: Building2, section: "facilities" },
+  { href: "/admin/rooms", label: "部屋・空室管理", icon: DoorOpen, section: "rooms" },
+  { href: "/admin/tours", label: "見学管理", icon: CalendarCheck, section: "tours" },
+  { href: "/admin/referrers", label: "紹介元管理", icon: Handshake, section: "referrers" },
+  { href: "/admin/ads", label: "広告管理", icon: Megaphone, section: "ads" },
+  { href: "/admin/lp", label: "LP管理", icon: FileText, section: "lp" },
+  { href: "/admin/articles", label: "記事CMS", icon: Newspaper, section: "articles" },
+  { href: "/admin/users", label: "ユーザー管理", icon: UserCog, section: "users" },
+  { href: "/admin/settings", label: "連携設定", icon: Settings, section: "settings" },
+  { href: "/admin/logs", label: "操作ログ", icon: ScrollText, section: "logs" },
 ];
 
 export function Sidebar({ user }: { user: AppUser }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // ロールに応じて表示するナビを絞り込み（21. 権限管理）
+  const navItems = NAV.filter((item) => canAccess(user.role, item.section));
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
 
   const nav = (
     <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3">
-      {NAV.map((item) => {
+      {navItems.map((item) => {
         const active = isActive(item.href, item.exact);
         return (
           <Link

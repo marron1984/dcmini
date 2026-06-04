@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/admin/Sidebar";
 import { getCurrentUser } from "@/lib/auth";
 import { getNotifications } from "@/lib/data/admin";
 import { createClient } from "@/lib/supabase/server";
+import { canAccess } from "@/lib/permissions";
 import { signOut } from "@/app/admin/actions";
 
 export const metadata = {
@@ -47,7 +48,9 @@ export default async function DashboardLayout({
     );
   }
 
-  const notifications = await getNotifications();
+  // 通知は案件関連のため、閲覧権限のあるロールのみ集計・表示（ad_manager除外）
+  const showNotifications = canAccess(user.role, "notifications");
+  const notifications = showNotifications ? await getNotifications() : [];
   const highCount = notifications.filter((n) => n.severity === "high").length;
 
   return (
@@ -56,6 +59,7 @@ export default async function DashboardLayout({
       <div className="flex-1 overflow-x-hidden">
         {/* 上部バー（通知ベル） */}
         <div className="flex h-14 items-center justify-end border-b border-slate-200 bg-white px-4 sm:px-6">
+          {showNotifications && (
           <Link
             href="/admin/notifications"
             className="relative flex h-10 w-10 items-center justify-center rounded-xl text-ink-soft hover:bg-slate-100"
@@ -72,6 +76,7 @@ export default async function DashboardLayout({
               </span>
             )}
           </Link>
+          )}
         </div>
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
           {children}

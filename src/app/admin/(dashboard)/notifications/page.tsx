@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { getNotifications } from "@/lib/data/admin";
 import { NOTIFICATION_CATEGORIES } from "@/lib/constants";
 import { formatDate, formatDateTime } from "@/lib/utils";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 
 const SEVERITY_BORDER: Record<string, string> = {
   high: "border-l-red-500",
@@ -14,6 +16,9 @@ const SEVERITY_BORDER: Record<string, string> = {
 };
 
 export default async function NotificationsPage() {
+  const { ok } = await checkSectionAccess("notifications");
+  if (!ok) return <ForbiddenCard />;
+
   const notifications = await getNotifications();
 
   // カテゴリ別に件数集計

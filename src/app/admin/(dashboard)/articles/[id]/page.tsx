@@ -5,12 +5,17 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArticleForm } from "@/components/admin/ArticleForm";
 import { getArticleById } from "@/lib/data/admin";
+import { checkSectionAccess } from "@/lib/guard";
+import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
 
 export default async function ArticleDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
+  const { ok } = await checkSectionAccess("articles");
+  if (!ok) return <ForbiddenCard />;
+
   const article = await getArticleById(params.id);
   if (!article) notFound();
 
