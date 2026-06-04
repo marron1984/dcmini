@@ -37,7 +37,7 @@ export async function updateLeadStatus(leadId: string, status: LeadStatus) {
   const supabase = createClient();
   const { error } = await supabase
     .from("leads")
-    .update({ status })
+    .update({ status, status_changed_at: new Date().toISOString() })
     .eq("id", leadId);
   if (error) return { ok: false, error: error.message };
   // ステータス変更を履歴に残す
@@ -153,6 +153,7 @@ export async function setLostReason(
       status: "lost",
       lost_reason: lostReason,
       reapproach_date: reapproachDate,
+      status_changed_at: new Date().toISOString(),
     })
     .eq("id", leadId);
   if (error) return { ok: false, error: error.message };

@@ -41,14 +41,15 @@ export async function submitContact(
     if (v === "no") return false;
     return null;
   };
-  const str = (k: string): string | null => {
+  // 文字数上限を設けて巨大ペイロード投入を防ぐ（相談内容のみ長め）
+  const str = (k: string, max = 200): string | null => {
     const v = (formData.get(k) as string)?.trim();
-    return v ? v : null;
+    return v ? v.slice(0, max) : null;
   };
 
   const payload = {
     status: "new" as const,
-    consultant_name: consultantName,
+    consultant_name: consultantName.slice(0, 100),
     consultant_name_kana: str("consultant_name_kana"),
     consultant_phone: phone || null,
     consultant_email: email || null,
@@ -68,7 +69,7 @@ export async function submitContact(
     desired_move_in_date: str("desired_move_in_date"),
     budget: num("budget"),
     desired_area: str("desired_area"),
-    note: str("note"),
+    note: str("note", 2000),
 
     // 流入情報（9）
     lp_name: str("lp_name"),

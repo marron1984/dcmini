@@ -86,6 +86,7 @@ export interface Lead {
 
   lost_reason: string | null;
   reapproach_date: string | null;
+  status_changed_at?: string;
 
   lp_name: string | null;
   utm_source: string | null;

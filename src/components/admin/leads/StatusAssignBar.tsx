@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Select } from "@/components/ui/input";
 import { LEAD_STATUSES } from "@/lib/constants";
 import { updateLeadStatus, assignLead } from "@/app/admin/actions";
@@ -17,6 +18,7 @@ export function StatusAssignBar({
   assignedUserId: string | null;
   staff: AppUser[];
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -25,6 +27,7 @@ export function StatusAssignBar({
     startTransition(async () => {
       const res = await updateLeadStatus(leadId, value);
       setMsg(res.ok ? "ステータスを更新しました" : res.error ?? "更新に失敗しました");
+      if (res.ok) router.refresh();
     });
   }
 

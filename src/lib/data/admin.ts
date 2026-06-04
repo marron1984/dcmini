@@ -12,6 +12,12 @@ import type {
   AuditLog,
 } from "@/lib/types";
 
+// 検索語のサニタイズ。PostgRESTのor()フィルタ構文文字（, ( ) . :）と
+// LIKEワイルドカード（% _）、バックスラッシュを除去してフィルタ注入を防ぐ。
+function sanitizeSearch(input: string): string {
+  return input.replace(/[,().:%_\\*]/g, " ").trim().slice(0, 100);
+}
+
 // 共通: クエリ失敗時は空にフォールバック（Supabase未設定でもUIが表示される）
 async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
@@ -45,11 +51,12 @@ export async function getLeads(filters: LeadFilters = {}): Promise<Lead[]> {
     if (filters.care_level) query = query.eq("care_level", filters.care_level);
     if (filters.welfare === "yes") query = query.eq("welfare_status", true);
     if (filters.dementia === "yes") query = query.eq("dementia_status", true);
-    if (filters.area) query = query.ilike("desired_area", `%${filters.area}%`);
+    if (filters.area) query = query.ilike("desired_area", `%${sanitizeSearch(filters.area)}%`);
     if (filters.source) query = query.eq("utm_source", filters.source);
     if (filters.q) {
+      const q = sanitizeSearch(filters.q);
       query = query.or(
-        `consultant_name.ilike.%${filters.q}%,resident_name.ilike.%${filters.q}%,consultant_phone.ilike.%${filters.q}%`
+        `consultant_name.ilike.%${q}%,resident_name.ilike.%${q}%,consultant_phone.ilike.%${q}%`
       );
     }
 
@@ -193,10 +200,12 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
-    const iso = startOfMonth.toISOString();
+    const startMs = startOfMonth.getTime();
+    // 日時文字列を安全に数値化（フォーマット/TZ差異に依存しない比較のため）
+    const ts = (v?: string | null) => (v ? new Date(v).getTime() : 0);
 
     const [leadsRes, roomsRes, toursRes] = await Promise.all([
-      supabase.from("leads").select("id, status, created_at, updated_at, consultant_name, resident_name, assigned_user:assigned_user_id(id, name)"),
+      supabase.from("leads").select("id, status, created_at, updated_at, status_changed_at, consultant_name, resident_name, assigned_user:assigned_user_id(id, name)"),
       supabase.from("rooms").select("id, status"),
       supabase.from("tours").select("*, lead:lead_id(id, consultant_name, resident_name), facility:facility_id(id, name)"),
     ]);
@@ -238,18 +247,21 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     }
     const staffPerformance = Array.from(perfMap.values()).sort((a, b) => b.total - a.total);
 
+    // ステータス遷移時刻（専用列。未設定の既存行は updated_at で近似）
+    const statusChangedMs = (l: Lead) => ts(l.status_changed_at ?? l.updated_at);
+
     return {
       total: leads.length,
       byStatus,
-      newThisMonth: leads.filter((l) => l.created_at >= iso).length,
+      newThisMonth: leads.filter((l) => ts(l.created_at) >= startMs).length,
       movedInThisMonth: leads.filter(
-        (l) => l.status === "moved_in" && l.updated_at >= iso
+        (l) => l.status === "moved_in" && statusChangedMs(l) >= startMs
       ).length,
       lostThisMonth: leads.filter(
-        (l) => l.status === "lost" && l.updated_at >= iso
+        (l) => l.status === "lost" && statusChangedMs(l) >= startMs
       ).length,
       toursThisMonth: tours.filter(
-        (t) => t.scheduled_at && t.scheduled_at >= iso
+        (t) => t.scheduled_at && ts(t.scheduled_at) >= startMs
       ).length,
       vacantRooms: rooms.filter((r) => r.status === "vacant").length,
       totalRooms: rooms.length,
@@ -302,10 +314,9 @@ export async function getReferrersWithStats(): Promise<ReferrerWithStats[]> {
 
     return referrers.map((r) => {
       const refLeads = leads.filter((l) => l.referrer_id === r.id);
-      const leadIds = new Set(refLeads.map((l) => l.id));
-      const tourCount = tours.filter((t) => {
-        return leadToRef.get(t.lead_id) === r.id || leadIds.has(t.lead_id);
-      }).length;
+      const tourCount = tours.filter(
+        (t) => leadToRef.get(t.lead_id) === r.id
+      ).length;
       const contractCount = refLeads.filter((l) => l.status === "moved_in").length;
       return {
         ...r,
@@ -475,8 +486,9 @@ export async function getNotifications(): Promise<NotificationItem[]> {
         });
       }
 
-      // 初回連絡未対応（new / awaiting_contact が2日以上）
-      if (["new", "awaiting_contact"].includes(l.status) && age > ms(2)) {
+      // 初回連絡未対応（new / awaiting_contact が24時間超）
+      // ※ new_inquiry(24時間以内) と区間を連続させ、隙間・重複を防ぐ
+      if (["new", "awaiting_contact"].includes(l.status) && age > ms(1)) {
         items.push({
           id: `nofc-${l.id}`,
           category: "no_first_contact",
@@ -504,8 +516,8 @@ export async function getNotifications(): Promise<NotificationItem[]> {
         }
       }
 
-      // 失注リスク（再アプローチ予定日が到来）
-      if (l.status === "lost" && l.reapproach_date && l.reapproach_date <= today) {
+      // 失注リスク（再アプローチ予定日が到来）。日付部分のみで比較（時刻付きでも安全）
+      if (l.status === "lost" && l.reapproach_date && l.reapproach_date.slice(0, 10) <= today) {
         items.push({
           id: `reapp-${l.id}`,
           category: "reapproach",
@@ -539,7 +551,7 @@ export async function getNotifications(): Promise<NotificationItem[]> {
     const leadStatus = new Map(leads.map((l) => [l.id, l.status]));
     const seenAction = new Set<string>();
     for (const a of acts) {
-      if (!a.next_action_date || a.next_action_date > today) continue;
+      if (!a.next_action_date || a.next_action_date.slice(0, 10) > today) continue;
       if (seenAction.has(a.lead_id)) continue; // 案件ごとに最新1件
       const st = leadStatus.get(a.lead_id);
       if (!st || CLOSED_STATUSES.includes(st)) continue;

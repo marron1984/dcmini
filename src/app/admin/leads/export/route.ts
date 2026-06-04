@@ -10,6 +10,10 @@ export async function GET(request: NextRequest) {
   if (!user) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }
+  // 個人情報の一括出力は admin / consultant のみ許可（viewer・ad_manager は不可）
+  if (!["admin", "consultant"].includes(user.role)) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
 
   const sp = request.nextUrl.searchParams;
   const filters: LeadFilters = {

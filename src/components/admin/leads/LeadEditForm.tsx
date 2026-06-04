@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Input, Textarea, Select, Field } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CARE_LEVELS } from "@/lib/constants";
@@ -26,6 +27,7 @@ function YesNo({ name, label, value }: { name: string; label: string; value: boo
 }
 
 export function LeadEditForm({ lead }: { lead: Lead }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -36,6 +38,8 @@ export function LeadEditForm({ lead }: { lead: Lead }) {
     startTransition(async () => {
       const res = await updateLeadFields(lead.id, fd);
       setMsg(res.ok ? "保存しました" : res.error ?? "保存に失敗しました");
+      // サマリーや施設マッチングのスコアを最新化
+      if (res.ok) router.refresh();
     });
   }
 

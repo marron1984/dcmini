@@ -15,14 +15,20 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     .eq("id", user.id)
     .single();
 
-  if (data) return data as AppUser;
+  if (data) {
+    const appUser = data as AppUser;
+    // 無効化されたスタッフは未認可として扱う（セッションが残っていてもアクセス不可）
+    if (!appUser.is_active) return null;
+    return appUser;
+  }
 
-  // users行が未作成のフォールバック（トリガ未適用環境など）
+  // users行が取得できない異常系（トリガ未適用 / RLSで読めない等）は
+  // フェイルオープンを避け、書き込み権限を持たない最小権限(viewer)にフォールバックする。
   return {
     id: user.id,
     name: user.email?.split("@")[0] ?? "",
     email: user.email ?? "",
-    role: "consultant",
+    role: "viewer",
     is_active: true,
     created_at: user.created_at ?? new Date().toISOString(),
     updated_at: new Date().toISOString(),

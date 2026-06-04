@@ -84,16 +84,20 @@ export function scoreFacility(lead: Lead, facility: Facility): FacilityMatch {
     15
   );
 
-  // 要介護度
+  // 要介護度（双方がマスタ既知の値のときのみ採点。未知/自由入力は採点対象外）
   if (lead.care_level && facility.max_care_level) {
-    const ok = careIndex(lead.care_level) <= careIndex(facility.max_care_level);
-    total += 15;
-    earned += ok ? 15 : 0;
-    reasons.push({
-      label: ok ? "要介護度に対応可能" : "要介護度が対応上限超",
-      ok,
-      weight: 15,
-    });
+    const li = careIndex(lead.care_level);
+    const fi = careIndex(facility.max_care_level);
+    if (li >= 0 && fi >= 0) {
+      const ok = li <= fi;
+      total += 15;
+      earned += ok ? 15 : 0;
+      reasons.push({
+        label: ok ? "要介護度に対応可能" : "要介護度が対応上限超",
+        ok,
+        weight: 15,
+      });
+    }
   }
 
   // エリア

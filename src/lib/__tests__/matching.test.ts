@@ -134,6 +134,14 @@ describe("scoreFacility", () => {
     const vacancy = result.reasons.find((r) => r.label.includes("空室"));
     expect(vacancy?.ok).toBe(false);
   });
+
+  it("要介護度がマスタ外の自由入力なら採点対象外（誤適合しない）", () => {
+    const lead = makeLead({ care_level: "不明" });
+    const facility = makeFacility({ max_care_level: "要介護2" });
+    const result = scoreFacility(lead, facility);
+    const careReason = result.reasons.find((r) => r.label.includes("要介護度"));
+    expect(careReason).toBeUndefined();
+  });
 });
 
 describe("matchFacilities", () => {
