@@ -429,22 +429,39 @@ const CLOSED_STATUSES = ["moved_in", "lost"];
 export async function getNotifications(): Promise<NotificationItem[]> {
   return safe(async () => {
     const supabase = createClient();
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const ms = (d: number) => d * 24 * 60 * 60 * 1000;
+    const nowISO = now.toISOString();
+    const soonISO = new Date(now.getTime() + ms(2)).toISOString();
+
+    // 全管理ページのレイアウトで呼ばれるため、DB側で対象行を絞って取得する。
     const [leadsRes, toursRes, actsRes] = await Promise.all([
+      // 完了案件(moved_in)は通知対象外。残りのみ取得。
       supabase
         .from("leads")
-        .select("id, status, consultant_name, created_at, updated_at, reapproach_date, lost_reason"),
+        .select("id, status, consultant_name, created_at, status_changed_at, reapproach_date, lost_reason")
+        .neq("status", "moved_in")
+        .limit(1000),
+      // 今後48時間以内の見学のみ
       supabase
         .from("tours")
-        .select("id, scheduled_at, lead:lead_id(id, consultant_name), facility:facility_id(id, name)"),
+        .select("id, scheduled_at, lead:lead_id(id, consultant_name), facility:facility_id(id, name)")
+        .gte("scheduled_at", nowISO)
+        .lte("scheduled_at", soonISO),
+      // 期日が到来した次回アクションのみ
       supabase
         .from("lead_activities")
         .select("id, lead_id, content, next_action_date, created_at")
-        .order("created_at", { ascending: false }),
+        .not("next_action_date", "is", null)
+        .lte("next_action_date", today)
+        .order("created_at", { ascending: false })
+        .limit(500),
     ]);
 
     const leads = (leadsRes.data as unknown as {
       id: string; status: string; consultant_name: string;
-      created_at: string; updated_at: string;
+      created_at: string; status_changed_at: string | null;
       reapproach_date: string | null; lost_reason: string | null;
     }[]) ?? [];
     const tours = (toursRes.data as unknown as {
@@ -456,16 +473,6 @@ export async function getNotifications(): Promise<NotificationItem[]> {
       id: string; lead_id: string; content: string;
       next_action_date: string | null; created_at: string;
     }[]) ?? [];
-
-    const now = new Date();
-    const today = now.toISOString().slice(0, 10);
-    const ms = (d: number) => d * 24 * 60 * 60 * 1000;
-
-    // 各案件の最終活動日時
-    const lastActivity = new Map<string, string>();
-    for (const a of acts) {
-      if (!lastActivity.has(a.lead_id)) lastActivity.set(a.lead_id, a.created_at);
-    }
 
     const items: NotificationItem[] = [];
 
@@ -500,17 +507,17 @@ export async function getNotifications(): Promise<NotificationItem[]> {
         });
       }
 
-      // 長期放置（未クローズで最終活動が14日以上前）
+      // 長期放置（未クローズで、同一ステータスのまま14日以上経過）
       if (!CLOSED_STATUSES.includes(l.status)) {
-        const last = lastActivity.get(l.id) ?? l.created_at;
-        if (now.getTime() - new Date(last).getTime() > ms(14)) {
+        const since = l.status_changed_at ?? l.created_at;
+        if (now.getTime() - new Date(since).getTime() > ms(14)) {
           items.push({
             id: `stale-${l.id}`,
             category: "stalled",
             title: "長期放置案件",
-            detail: `${l.consultant_name} 様（14日以上動きなし）`,
+            detail: `${l.consultant_name} 様（14日以上ステータス変化なし）`,
             href: `/admin/leads/${l.id}`,
-            date: last,
+            date: since,
             severity: "medium",
           });
         }
