@@ -55,6 +55,8 @@ src/
     permissions.ts セクション別アクセス制御（canAccess）
     guard.ts       checkSectionAccess（ページ先頭ガード）
     matching.ts    施設マッチング（適合度スコア・純粋関数）
+    seo.ts         構造化データ(JSON-LD)・URLビルダー（純粋関数）
+    ai.ts / ai-prompts.ts  AI連携（サーバー専用）/ プロンプト構築（純粋）
     csv.ts / utils.ts / audit.ts / constants.ts / types.ts
 supabase/migrations/  0001_init / 0002_rls / 0003_articles_audit / 0004_settings_keys / 0005_status_changed_at
 supabase/seed.sql     デモデータ

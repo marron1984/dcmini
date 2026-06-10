@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { Breadcrumbs } from "@/components/public/Breadcrumbs";
 import { getPublishedFacilities } from "@/lib/data/public";
 import { getSiteSettings } from "@/lib/auth";
 import { FacilityCard } from "@/components/public/FacilityCard";
 import { Phone } from "lucide-react";
 
 export const metadata = {
+  alternates: { canonical: "/vacancies" },
   title: "空室・施設情報",
   description: "ご紹介可能な介護施設・高齢者住宅の空室情報をご覧いただけます。",
 };
@@ -15,9 +17,10 @@ export default async function VacanciesPage() {
     getSiteSettings(),
   ]);
   const tel = settings.phone_number.replace(/[^0-9]/g, "");
-
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
+    <>
+      <Breadcrumbs items={[{ name: "空室・施設情報", path: "/vacancies" }]} />
+      <div className="mx-auto max-w-6xl px-4 pb-12 pt-4">
       <div className="text-center">
         <p className="section-eyebrow">空室・施設情報</p>
         <h1 className="text-2xl font-bold text-ink sm:text-3xl">
@@ -54,5 +57,6 @@ export default async function VacanciesPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -1,6 +1,8 @@
 import { SITE_NAME } from "@/lib/constants";
+import { Breadcrumbs } from "@/components/public/Breadcrumbs";
 
 export const metadata = {
+  alternates: { canonical: "/privacy" },
   title: "プライバシーポリシー",
   description: `${SITE_NAME}のプライバシーポリシー（個人情報保護方針）です。`,
 };
@@ -55,7 +57,9 @@ const SECTIONS: { h: string; body: string[] }[] = [
 
 export default function PrivacyPage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12">
+    <>
+      <Breadcrumbs items={[{ name: "プライバシーポリシー", path: "/privacy" }]} />
+      <div className="mx-auto max-w-3xl px-4 pb-12 pt-4">
       <div className="text-center">
         <p className="section-eyebrow justify-center">個人情報保護方針</p>
         <h1 className="heading-underline text-2xl font-bold tracking-tight text-ink sm:text-3xl">
@@ -82,5 +86,6 @@ export default function PrivacyPage() {
         </p>
       </div>
     </div>
+    </>
   );
 }

@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { Breadcrumbs } from "@/components/public/Breadcrumbs";
 import { Phone, MessageCircle, ShieldCheck, HeartHandshake, Wallet } from "lucide-react";
 import { SITE_NAME } from "@/lib/constants";
 import { getSiteSettings } from "@/lib/auth";
 
 export const metadata = {
+  alternates: { canonical: "/about" },
   title: "運営者情報",
   description: `${SITE_NAME}の運営者情報・サービス概要です。`,
 };
@@ -21,9 +23,10 @@ const COMPANY_ROWS: { label: string; value: string }[] = [
 export default async function AboutPage() {
   const settings = await getSiteSettings();
   const tel = settings.phone_number.replace(/[^0-9]/g, "");
-
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12">
+    <>
+      <Breadcrumbs items={[{ name: "運営者情報", path: "/about" }]} />
+      <div className="mx-auto max-w-3xl px-4 pb-12 pt-4">
       <div className="text-center">
         <p className="section-eyebrow justify-center">運営者情報</p>
         <h1 className="heading-underline text-2xl font-bold tracking-tight text-ink sm:text-3xl">
@@ -92,5 +95,6 @@ export default async function AboutPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

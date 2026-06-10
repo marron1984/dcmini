@@ -4,6 +4,7 @@ import { Phone, MessageCircle, Check } from "lucide-react";
 import { CONCERN_CATEGORIES } from "@/lib/constants";
 import { getSiteSettings } from "@/lib/auth";
 import { ContactForm } from "@/components/public/ContactForm";
+import { Breadcrumbs } from "@/components/public/Breadcrumbs";
 
 // 悩み別の個別LP（7. 各カテゴリは個別LP化できる構造）
 // MVPではカテゴリごとの定型コンテンツを保持。第2フェーズでlp_pagesテーブル化を想定。
@@ -59,8 +60,16 @@ export function generateStaticParams() {
 
 export function generateMetadata({ params }: { params: { slug: string } }) {
   const cat = CONCERN_CATEGORIES.find((c) => c.slug === params.slug);
+  const content = LP_CONTENT[params.slug];
   if (!cat) return {};
-  return { title: cat.label };
+  return {
+    title: `${cat.label}【大阪・無料】`,
+    description: content
+      ? `${content.catch} 専門スタッフが無料で対応。${content.solutions.join("、")}。`
+      : undefined,
+    alternates: { canonical: `/soudan/${params.slug}` },
+    openGraph: { title: cat.label, type: "article" },
+  };
 }
 
 export default async function SoudanLpPage({
@@ -77,7 +86,8 @@ export default async function SoudanLpPage({
 
   return (
     <>
-      <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-white px-4 py-16">
+      <Breadcrumbs items={[{ name: cat.label, path: `/soudan/${params.slug}` }]} />
+      <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-white px-4 pb-16 pt-8">
         <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-200/40 blur-3xl" />
         <div className="pointer-events-none absolute inset-0 bg-hero-grid [background-size:24px_24px] opacity-50" />
         <div className="relative mx-auto max-w-3xl text-center animate-fade-up">

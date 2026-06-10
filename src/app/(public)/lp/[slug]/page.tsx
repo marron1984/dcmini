@@ -5,6 +5,8 @@ import { getPublishedLp, getPublishedLpSlugs } from "@/lib/data/public";
 import { getSiteSettings } from "@/lib/auth";
 import { ContactForm } from "@/components/public/ContactForm";
 import { JsonLd } from "@/components/JsonLd";
+import { Breadcrumbs } from "@/components/public/Breadcrumbs";
+import { faqLd } from "@/lib/seo";
 
 // 第2フェーズ: DB(lp_pages)から動的に生成するGoogle広告用LP
 export const dynamicParams = true;
@@ -20,6 +22,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title: lp.title,
     description: lp.hero_copy ?? undefined,
+    keywords: lp.target_keyword ? [lp.target_keyword] : undefined,
+    alternates: { canonical: `/lp/${params.slug}` },
+    openGraph: { type: "article", title: lp.title, description: lp.hero_copy ?? undefined },
   };
 }
 
@@ -44,23 +49,11 @@ export default async function DynamicLpPage({
   const audience = toLines(lp.target_audience);
   const problems = toLines(lp.problems);
 
-  const faqJsonLd =
-    lp.faq.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: lp.faq.map((f) => ({
-            "@type": "Question",
-            name: f.q,
-            acceptedAnswer: { "@type": "Answer", text: f.a },
-          })),
-        }
-      : null;
-
   return (
     <>
-      {faqJsonLd && <JsonLd data={faqJsonLd} />}
-      <section className="bg-gradient-to-b from-brand-50 to-white px-4 py-14">
+      {lp.faq.length > 0 && <JsonLd data={faqLd(lp.faq)} />}
+      <Breadcrumbs items={[{ name: lp.title, path: `/lp/${params.slug}` }]} />
+      <section className="bg-gradient-to-b from-brand-50 to-white px-4 pb-14 pt-8">
         <div className="mx-auto max-w-3xl text-center">
           {lp.target_keyword && (
             <p className="inline-block rounded-full bg-brand-100 px-4 py-1.5 text-sm font-bold text-brand-700">

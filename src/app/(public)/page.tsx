@@ -26,6 +26,7 @@ import { FacilityCard } from "@/components/public/FacilityCard";
 import { Faq } from "@/components/public/Faq";
 import { Reveal } from "@/components/public/Reveal";
 import { JsonLd } from "@/components/JsonLd";
+import { faqLd, serviceLd } from "@/lib/seo";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Brain,
@@ -43,19 +44,10 @@ export default async function HomePage() {
   const facilities = await getPublishedFacilities();
   const tel = settings.phone_number.replace(/[^0-9]/g, "");
 
-  const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: HOME_FAQ.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
-    })),
-  };
-
   return (
     <>
-      <JsonLd data={faqJsonLd} />
+      <JsonLd data={faqLd(HOME_FAQ)} />
+      <JsonLd data={serviceLd()} />
       {/* 1. ファーストビュー */}
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 via-white to-white">
         {/* 装飾: 背景のグラデーションブロブとドットグリッド */}
@@ -330,6 +322,24 @@ export default async function HomePage() {
           </Reveal>
           <Reveal delay={100} className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-card sm:p-8">
             <ContactForm />
+          </Reveal>
+
+          {/* 入力が面倒・お急ぎの方への電話フォールバック（CV取りこぼし防止） */}
+          <Reveal delay={150} className="mt-6 flex flex-col items-center gap-3 rounded-2xl bg-slate-50 px-5 py-5 text-center sm:flex-row sm:justify-between sm:text-left">
+            <div>
+              <p className="font-bold text-ink">入力が難しい・お急ぎの方は</p>
+              <p className="text-sm text-ink-muted">
+                お電話で直接ご相談ください（受付 {settings.business_hours}）
+              </p>
+            </div>
+            <a
+              href={`tel:${tel}`}
+              data-cv="phone"
+              className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-lg font-bold text-white shadow-soft transition-all hover:bg-brand-700 active:scale-[0.98]"
+            >
+              <Phone className="h-5 w-5" />
+              {settings.phone_number}
+            </a>
           </Reveal>
         </div>
       </section>

@@ -5,7 +5,8 @@ import { getPublishedArticle, getPublishedArticleSlugs } from "@/lib/data/public
 import { getSiteSettings } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { JsonLd } from "@/components/JsonLd";
-import { SITE_NAME } from "@/lib/constants";
+import { Breadcrumbs } from "@/components/public/Breadcrumbs";
+import { articleLd } from "@/lib/seo";
 import { formatDate } from "@/lib/utils";
 
 export const dynamicParams = true;
@@ -21,6 +22,15 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title: article.title,
     description: article.excerpt ?? undefined,
+    alternates: { canonical: `/column/${params.slug}` },
+    openGraph: {
+      type: "article",
+      title: article.title,
+      description: article.excerpt ?? undefined,
+      images: article.cover_image_url ? [article.cover_image_url] : undefined,
+      publishedTime: article.published_at ?? undefined,
+      modifiedTime: article.updated_at ?? undefined,
+    },
   };
 }
 
@@ -36,20 +46,25 @@ export default async function ArticlePage({
   const tel = settings.phone_number.replace(/[^0-9]/g, "");
   const paragraphs = (article.body ?? "").split(/\n{2,}/).filter(Boolean);
 
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: article.title,
-    description: article.excerpt ?? undefined,
-    image: article.cover_image_url ?? undefined,
-    datePublished: article.published_at ?? article.created_at,
-    dateModified: article.updated_at,
-    publisher: { "@type": "Organization", name: SITE_NAME },
-  };
-
   return (
-    <article className="mx-auto max-w-3xl px-4 py-12">
-      <JsonLd data={articleJsonLd} />
+    <article className="mx-auto max-w-3xl px-4 pb-12">
+      <JsonLd
+        data={articleLd({
+          title: article.title,
+          slug: article.slug,
+          excerpt: article.excerpt,
+          image: article.cover_image_url,
+          publishedAt: article.published_at ?? article.created_at,
+          updatedAt: article.updated_at,
+        })}
+      />
+      <Breadcrumbs
+        className="-mx-0 pb-6 pt-6 text-xs text-ink-muted"
+        items={[
+          { name: "コラム", path: "/column" },
+          { name: article.title, path: `/column/${article.slug}` },
+        ]}
+      />
       <Link href="/column" className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-ink">
         <ArrowLeft className="h-4 w-4" /> コラム一覧へ戻る
       </Link>

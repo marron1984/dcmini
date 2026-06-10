@@ -1,18 +1,21 @@
 import Link from "next/link";
+import { Breadcrumbs } from "@/components/public/Breadcrumbs";
 import { getPublishedArticles } from "@/lib/data/public";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 
 export const metadata = {
+  alternates: { canonical: "/column" },
   title: "介護・施設探しのコラム",
   description: "介護施設探しや費用、認知症・生活保護などのお役立ち情報をお届けします。",
 };
 
 export default async function ColumnListPage() {
   const articles = await getPublishedArticles();
-
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12">
+    <>
+      <Breadcrumbs items={[{ name: "コラム", path: "/column" }]} />
+      <div className="mx-auto max-w-5xl px-4 pb-12 pt-4">
       <div className="text-center">
         <p className="section-eyebrow">お役立ちコラム</p>
         <h1 className="text-2xl font-bold text-ink sm:text-3xl">介護・施設探しのコラム</h1>
@@ -54,5 +57,6 @@ export default async function ColumnListPage() {
         </div>
       )}
     </div>
+    </>
   );
 }
