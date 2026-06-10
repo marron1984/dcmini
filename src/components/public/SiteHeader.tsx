@@ -1,6 +1,10 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Phone, MessageCircle } from "lucide-react";
 import { SITE_NAME } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 export function SiteHeader({
   phone,
@@ -9,8 +13,24 @@ export function SiteHeader({
   phone: string;
   lineUrl: string;
 }) {
+  // スクロールに反応して影と背景の不透明度を強める
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
+    <header
+      className={cn(
+        "sticky top-0 z-40 border-b backdrop-blur-xl transition-all duration-300",
+        scrolled
+          ? "border-slate-200/70 bg-white/90 shadow-soft"
+          : "border-transparent bg-white/70"
+      )}
+    >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="group flex items-center gap-2.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-white shadow-soft transition-transform group-hover:scale-105">

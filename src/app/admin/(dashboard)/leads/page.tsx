@@ -5,13 +5,9 @@ import { LeadStatusBadge } from "@/components/admin/StatusBadge";
 import { Input, Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getLeads, getStaffUsers, type LeadFilters } from "@/lib/data/admin";
-import {
-  LEAD_STATUSES,
-  KANBAN_STATUSES,
-  LEAD_STATUS_MAP,
-  CARE_LEVELS,
-} from "@/lib/constants";
-import { formatDate, relativeTime } from "@/lib/utils";
+import { LeadsKanban } from "@/components/admin/LeadsKanban";
+import { LEAD_STATUSES, CARE_LEVELS } from "@/lib/constants";
+import { formatDate } from "@/lib/utils";
 import type { Lead } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { checkSectionAccess } from "@/lib/guard";
@@ -198,54 +194,6 @@ function LeadsTable({ leads }: { leads: Lead[] }) {
           ))}
         </tbody>
       </table>
-    </div>
-  );
-}
-
-function LeadsKanban({ leads }: { leads: Lead[] }) {
-  const columns = [...KANBAN_STATUSES, "lost", "on_hold"] as const;
-  return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
-      {columns.map((status) => {
-        const items = leads.filter((l) => l.status === status);
-        return (
-          <div key={status} className="w-72 shrink-0">
-            <div className="mb-2 flex items-center justify-between px-1">
-              <span className="text-sm font-bold text-ink">
-                {LEAD_STATUS_MAP[status].label}
-              </span>
-              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-ink-soft">
-                {items.length}
-              </span>
-            </div>
-            <div className="space-y-2 rounded-2xl bg-slate-100 p-2">
-              {items.map((l) => (
-                <Link
-                  key={l.id}
-                  href={`/admin/leads/${l.id}`}
-                  className="block rounded-xl border border-slate-200 bg-white p-3 hover:shadow-sm"
-                >
-                  <p className="font-semibold text-ink">{l.consultant_name}</p>
-                  {l.resident_name && (
-                    <p className="text-xs text-ink-muted">入居予定: {l.resident_name}</p>
-                  )}
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {l.care_level && (
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-ink-soft">{l.care_level}</span>
-                    )}
-                    {l.dementia_status && <span className="rounded bg-cyan-50 px-1.5 py-0.5 text-xs text-cyan-700">認知症</span>}
-                    {l.welfare_status && <span className="rounded bg-teal-50 px-1.5 py-0.5 text-xs text-teal-700">生保</span>}
-                  </div>
-                  <p className="mt-2 text-xs text-ink-muted">{relativeTime(l.created_at)}</p>
-                </Link>
-              ))}
-              {items.length === 0 && (
-                <p className="px-2 py-3 text-center text-xs text-ink-muted">なし</p>
-              )}
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }

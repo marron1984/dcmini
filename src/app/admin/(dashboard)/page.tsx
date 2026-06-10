@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CountUp } from "@/components/ui/count-up";
 import { LeadStatusBadge } from "@/components/admin/StatusBadge";
 import { getDashboardStats, getReferrersWithStats } from "@/lib/data/admin";
 import { LEAD_STATUSES } from "@/lib/constants";
@@ -30,12 +31,12 @@ export default async function DashboardPage() {
       : 0;
 
   const kpis = [
-    { label: "今月の新規相談", value: stats.newThisMonth, icon: Inbox, color: "from-brand-500 to-brand-700" },
-    { label: "今月の見学", value: stats.toursThisMonth, icon: CalendarCheck, color: "from-amber-400 to-orange-500" },
-    { label: "今月の入居", value: stats.movedInThisMonth, icon: Home, color: "from-emerald-500 to-teal-600" },
-    { label: "今月の失注", value: stats.lostThisMonth, icon: XCircle, color: "from-slate-400 to-slate-500" },
-    { label: "空室数", value: stats.vacantRooms, icon: DoorOpen, color: "from-green-500 to-emerald-600" },
-    { label: "稼働率", value: `${occupancy}%`, icon: TrendingUp, color: "from-brand-500 to-accent-500" },
+    { label: "今月の新規相談", value: stats.newThisMonth, suffix: "", icon: Inbox, color: "from-brand-500 to-brand-700" },
+    { label: "今月の見学", value: stats.toursThisMonth, suffix: "", icon: CalendarCheck, color: "from-amber-400 to-orange-500" },
+    { label: "今月の入居", value: stats.movedInThisMonth, suffix: "", icon: Home, color: "from-emerald-500 to-teal-600" },
+    { label: "今月の失注", value: stats.lostThisMonth, suffix: "", icon: XCircle, color: "from-slate-400 to-slate-500" },
+    { label: "空室数", value: stats.vacantRooms, suffix: "", icon: DoorOpen, color: "from-green-500 to-emerald-600" },
+    { label: "稼働率", value: occupancy, suffix: "%", icon: TrendingUp, color: "from-brand-500 to-accent-500" },
   ];
 
   return (
@@ -52,7 +53,9 @@ export default async function DashboardPage() {
               </span>
               <div>
                 <p className="text-sm text-ink-muted">{k.label}</p>
-                <p className="text-2xl font-bold tracking-tight text-ink">{k.value}</p>
+                <p className="text-2xl font-bold tracking-tight text-ink">
+                  <CountUp value={k.value} suffix={k.suffix} />
+                </p>
               </div>
             </CardContent>
           </Card>

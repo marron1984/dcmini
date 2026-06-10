@@ -1,5 +1,7 @@
 import { SiteHeader } from "@/components/public/SiteHeader";
 import { SiteFooter } from "@/components/public/SiteFooter";
+import { MobileCtaBar } from "@/components/public/MobileCtaBar";
+import { BackToTop } from "@/components/public/BackToTop";
 import { getSiteSettings } from "@/lib/auth";
 
 export default async function PublicLayout({
@@ -20,6 +22,8 @@ export default async function PublicLayout({
       <SiteHeader phone={settings.phone_number} lineUrl={settings.line_url} />
       <main id="main" className="flex-1">{children}</main>
       <SiteFooter phone={settings.phone_number} businessHours={settings.business_hours} />
+      <MobileCtaBar phone={settings.phone_number} lineUrl={settings.line_url} />
+      <BackToTop />
     </div>
   );
 }
