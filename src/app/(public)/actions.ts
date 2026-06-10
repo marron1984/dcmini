@@ -48,8 +48,8 @@ export async function submitContact(
     status: "new" as const,
     consultant_name: consultantName.slice(0, 100),
     consultant_name_kana: str("consultant_name_kana"),
-    consultant_phone: phone || null,
-    consultant_email: email || null,
+    consultant_phone: phone ? phone.slice(0, 30) : null,
+    consultant_email: email ? email.slice(0, 254) : null,
     relationship: str("relationship"),
     consultant_area: str("consultant_area"),
 

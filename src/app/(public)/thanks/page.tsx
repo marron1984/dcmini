@@ -40,7 +40,7 @@ export default async function ThanksPage() {
             <a
               href={`tel:${tel}`}
               data-cv="phone"
-              className="inline-flex h-13 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-200 bg-white px-6 py-3 text-base font-bold text-brand-700 shadow-soft transition-all hover:bg-brand-50 active:scale-[0.98]"
+              className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-200 bg-white px-6 py-3 text-base font-bold text-brand-700 shadow-soft transition-all hover:bg-brand-50 active:scale-[0.98]"
             >
               <Phone className="h-5 w-5" />
               電話で相談
@@ -50,7 +50,7 @@ export default async function ThanksPage() {
               target="_blank"
               rel="noopener noreferrer"
               data-cv="line"
-              className="inline-flex h-13 flex-1 items-center justify-center gap-2 rounded-xl bg-[#06C755] px-6 py-3 text-base font-bold text-white shadow-soft transition-all hover:brightness-105 active:scale-[0.98]"
+              className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#06C755] px-6 py-3 text-base font-bold text-white shadow-soft transition-all hover:brightness-105 active:scale-[0.98]"
             >
               <MessageCircle className="h-5 w-5" />
               LINEで相談

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 import { parseLooseInt } from "@/lib/utils";
+import { LEAD_STATUS_MAP } from "@/lib/constants";
 import type { LeadStatus, RoomStatus, TourResult } from "@/lib/types";
 
 // 編集権限チェック（admin / consultant のみ書き込み可）
@@ -41,12 +42,13 @@ export async function updateLeadStatus(leadId: string, status: LeadStatus) {
     .update({ status, status_changed_at: new Date().toISOString() })
     .eq("id", leadId);
   if (error) return { ok: false, error: error.message };
-  // ステータス変更を履歴に残す
+  // ステータス変更を履歴に残す（変更先のラベル付きでタイムラインに表示される）
+  const statusLabel = LEAD_STATUS_MAP[status]?.label ?? status;
   await supabase.from("lead_activities").insert({
     lead_id: leadId,
     user_id: user.id,
     activity_type: "status_change",
-    content: `ステータスを変更しました`,
+    content: `ステータスを「${statusLabel}」に変更しました`,
   });
   await logAction("lead.status_change", { entity: "lead", entityId: leadId, detail: { status } });
   revalidatePath(`/admin/leads/${leadId}`);
@@ -62,6 +64,7 @@ export async function assignLead(leadId: string, userId: string | null) {
     .update({ assigned_user_id: userId })
     .eq("id", leadId);
   if (error) return { ok: false, error: error.message };
+  await logAction("lead.assign", { entity: "lead", entityId: leadId, detail: { userId } });
   revalidatePath(`/admin/leads/${leadId}`);
   revalidatePath("/admin/leads");
   return { ok: true };
@@ -75,6 +78,7 @@ export async function assignReferrer(leadId: string, referrerId: string | null) 
     .update({ referrer_id: referrerId })
     .eq("id", leadId);
   if (error) return { ok: false, error: error.message };
+  await logAction("lead.referrer_change", { entity: "lead", entityId: leadId, detail: { referrerId } });
   revalidatePath(`/admin/leads/${leadId}`);
   return { ok: true };
 }
@@ -120,6 +124,7 @@ export async function updateLeadFields(leadId: string, formData: FormData) {
 
   const { error } = await supabase.from("leads").update(update).eq("id", leadId);
   if (error) return { ok: false, error: error.message };
+  await logAction("lead.update", { entity: "lead", entityId: leadId });
   revalidatePath(`/admin/leads/${leadId}`);
   return { ok: true };
 }
@@ -132,6 +137,7 @@ export async function updateLeadHearing(leadId: string, hearing: Record<string, 
     .update({ hearing })
     .eq("id", leadId);
   if (error) return { ok: false, error: error.message };
+  await logAction("lead.hearing_update", { entity: "lead", entityId: leadId });
   revalidatePath(`/admin/leads/${leadId}`);
   return { ok: true };
 }
@@ -185,6 +191,7 @@ export async function addProposal(leadId: string, facilityId: string, note: stri
     .from("lead_facility_proposals")
     .insert({ lead_id: leadId, facility_id: facilityId, note: note || null });
   if (error) return { ok: false, error: error.message };
+  await logAction("lead.proposal_add", { entity: "lead", entityId: leadId, detail: { facilityId } });
   revalidatePath(`/admin/leads/${leadId}`);
   return { ok: true };
 }
@@ -407,6 +414,7 @@ export async function deleteAdReport(id: string) {
   const supabase = createClient();
   const { error } = await supabase.from("ad_reports").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
+  await logAction("ad_report.delete", { entity: "ad_report", entityId: id });
   revalidatePath("/admin/ads");
   return { ok: true };
 }
@@ -480,6 +488,7 @@ export async function deleteLpPage(id: string) {
   const supabase = createClient();
   const { error } = await supabase.from("lp_pages").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
+  await logAction("lp.delete", { entity: "lp_page", entityId: id });
   revalidatePath("/admin/lp");
   return { ok: true };
 }

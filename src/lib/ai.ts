@@ -19,8 +19,10 @@ function getClient(): Anthropic {
   return client;
 }
 
-// 単発の生成。system は固定の指示（プロンプトキャッシュ対象）、
-// user に案件ごとの可変情報を置く（プレフィックスキャッシュを効かせる設計）。
+// 単発の生成。固定の指示を system（先頭）に、案件ごとの可変情報を user に置く
+// プレフィックスキャッシュ前提の構成。cache_control は system が最小キャッシュ長
+// （Opus系は4096トークン）を超えた場合に効く。現状の短い指示では実質no-opだが、
+// 指示を拡充した際に自動で効き始めるよう付与している。
 export async function generate(opts: {
   system: string;
   user: string;

@@ -17,6 +17,39 @@ function pct(a: number | null, b: number | null): string {
   return `${((a / b) * 100).toFixed(1)}%`;
 }
 
+// 他の削除ボタン（LP/記事）と同じ2段階確認
+function DeleteReportButton({ id }: { id: string }) {
+  const [confirming, setConfirming] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  if (confirming) {
+    return (
+      <span className="flex items-center justify-end gap-2 text-xs">
+        <button
+          onClick={() => startTransition(async () => { await deleteAdReport(id); })}
+          disabled={isPending}
+          className="font-semibold text-red-600 hover:underline"
+        >
+          {isPending ? "削除中..." : "削除する"}
+        </button>
+        <button onClick={() => setConfirming(false)} className="text-ink-muted hover:underline">
+          取消
+        </button>
+      </span>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setConfirming(true)}
+      className="text-slate-400 hover:text-red-600"
+      aria-label="削除"
+    >
+      <Trash2 className="h-4 w-4" />
+    </button>
+  );
+}
+
 export function AdReportManager({ reports }: { reports: AdReport[] }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
@@ -46,12 +79,6 @@ export function AdReportManager({ reports }: { reports: AdReport[] }) {
         formRef.current?.reset();
         setOpen(false);
       } else setError(res.error ?? "登録に失敗しました");
-    });
-  }
-
-  function onDelete(id: string) {
-    startTransition(async () => {
-      await deleteAdReport(id);
     });
   }
 
@@ -145,14 +172,7 @@ export function AdReportManager({ reports }: { reports: AdReport[] }) {
                   <td className="px-3 py-2.5 text-right font-semibold text-brand-700">{formatYen(div(r.cost, r.conversions))}</td>
                   <td className="px-3 py-2.5 text-right text-ink-soft">{r.move_ins ?? "—"}</td>
                   <td className="px-3 py-2.5 text-right">
-                    <button
-                      onClick={() => onDelete(r.id)}
-                      disabled={isPending}
-                      className="text-slate-400 hover:text-red-600"
-                      aria-label="削除"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <DeleteReportButton id={r.id} />
                   </td>
                 </tr>
               ))}

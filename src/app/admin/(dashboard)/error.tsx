@@ -29,8 +29,11 @@ export default function AdminError({
       </p>
       <div className="mt-6 flex gap-3">
         <Button onClick={reset}>再読み込み</Button>
-        <a href="/admin">
-          <Button variant="outline">ダッシュボードへ</Button>
+        <a
+          href="/admin"
+          className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 font-semibold text-ink hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-700"
+        >
+          ダッシュボードへ
         </a>
       </div>
     </div>

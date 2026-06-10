@@ -138,7 +138,7 @@ export function Sidebar({ user }: { user: AppUser }) {
 
         {nav}
 
-        <div className="mt-auto mx-3 mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+        <div className="mx-3 mt-auto rounded-xl border border-white/10 bg-white/5 px-4 py-3">
           <div className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-accent-500 text-xs font-bold text-white">
               {user.name.slice(0, 1)}
