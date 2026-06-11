@@ -51,9 +51,9 @@ export default async function HomePage() {
       {/* 1. ファーストビュー */}
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 via-white to-white">
         {/* 装飾: 背景のグラデーションブロブとドットグリッド */}
-        <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-brand-200/40 blur-3xl" />
-        <div className="pointer-events-none absolute -left-24 top-40 h-80 w-80 rounded-full bg-accent-200/30 blur-3xl" />
-        <div className="pointer-events-none absolute inset-0 bg-hero-grid [background-size:24px_24px] opacity-60" />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-brand-200/40 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -left-24 top-40 h-80 w-80 rounded-full bg-accent-200/30 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-hero-grid [background-size:24px_24px] opacity-60" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 lg:grid-cols-2 lg:py-24">
           <div className="animate-fade-up">
             <p className="inline-flex items-center gap-2 rounded-full border border-brand-100 bg-white/80 px-4 py-1.5 text-sm font-bold text-brand-700 shadow-soft backdrop-blur">
@@ -72,12 +72,12 @@ export default async function HomePage() {
               専門スタッフが<strong className="text-brand-700">無料</strong>でご相談をお受けします。
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
+              <a
                 href="#contact"
                 className="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-brand-600 px-7 text-lg font-bold text-white shadow-lift transition-all hover:bg-brand-700 hover:-translate-y-0.5 active:scale-[0.98]"
               >
                 無料で相談する
-              </Link>
+              </a>
               <a
                 href={`tel:${tel}`}
                 data-cv="phone"
@@ -262,7 +262,7 @@ export default async function HomePage() {
               <div className="relative h-full rounded-2xl border border-slate-200/70 bg-white p-6 text-center shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-card">
                 {/* PCで横のコネクタ */}
                 {i < arr.length - 1 && (
-                  <span className="pointer-events-none absolute right-0 top-12 hidden h-px w-6 translate-x-full bg-gradient-to-r from-brand-300 to-transparent lg:block" />
+                  <span aria-hidden="true" className="pointer-events-none absolute right-0 top-12 hidden h-px w-6 translate-x-full bg-gradient-to-r from-brand-300 to-transparent lg:block" />
                 )}
                 <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 to-accent-50 text-brand-600 ring-1 ring-brand-100">
                   <s.icon className="h-7 w-7" />
@@ -346,8 +346,8 @@ export default async function HomePage() {
 
       {/* 9. LINE相談導線 */}
       <section className="relative overflow-hidden bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 py-16">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-accent-400/20 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-accent-400/20 blur-3xl" />
         <Reveal className="relative mx-auto flex max-w-4xl flex-col items-center gap-6 px-4 text-center">
           <h2 className="text-2xl font-bold text-white sm:text-3xl">
             LINEでも気軽にご相談いただけます

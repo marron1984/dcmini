@@ -88,8 +88,8 @@ export default async function SoudanLpPage({
     <>
       <Breadcrumbs items={[{ name: cat.label, path: `/soudan/${params.slug}` }]} />
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-white px-4 pb-16 pt-8">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-200/40 blur-3xl" />
-        <div className="pointer-events-none absolute inset-0 bg-hero-grid [background-size:24px_24px] opacity-50" />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-200/40 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-hero-grid [background-size:24px_24px] opacity-50" />
         <div className="relative mx-auto max-w-3xl text-center animate-fade-up">
           <p className="inline-block rounded-full border border-brand-100 bg-white/80 px-4 py-1.5 text-sm font-bold text-brand-700 shadow-soft backdrop-blur">
             {cat.label}

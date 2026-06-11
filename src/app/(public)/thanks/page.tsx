@@ -12,7 +12,7 @@ export default async function ThanksPage() {
   const tel = settings.phone_number.replace(/[^0-9]/g, "");
   return (
     <div className="relative overflow-hidden">
-      <div className="pointer-events-none absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-emerald-100/50 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-emerald-100/50 blur-3xl" />
       <div className="relative mx-auto flex max-w-2xl flex-col items-center px-4 py-20 text-center animate-fade-up">
         <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 ring-8 ring-emerald-50/60">
           <CheckCircle2 className="h-12 w-12 text-emerald-500" />
