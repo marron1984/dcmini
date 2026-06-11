@@ -1,0 +1,50 @@
+name: Brushup
+
+# 自動ブラッシュアップ: 定期実行で品質ゲート（lint/typecheck/test/build）と
+# 軽量ヘルスチェック（scripts/brushup-check.mjs）を回し、劣化をジョブサマリへ報告する。
+# 手動実行(workflow_dispatch)でも起動可能。
+on:
+  schedule:
+    # 毎週月曜 00:00 UTC（日本時間 月曜 09:00）
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+# 同時実行は1本に制限
+concurrency:
+  group: brushup-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality gates & health check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+
+      - name: Health check (brushup)
+        run: npm run brushup
