@@ -36,6 +36,14 @@ export default async function AboutPage() {
           私たちは、介護施設探しでお困りのご本人・ご家族が、安心して相談できる窓口を目指しています。
           紹介会社まかせにせず、ご事情に寄り添った住まい探しを無料でサポートします。
         </p>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/hero-soudan.svg"
+          alt="スタッフが高齢者の住まい探しに寄り添うイラスト"
+          width={480}
+          height={360}
+          className="mx-auto mt-6 w-full max-w-xs"
+        />
       </div>
 
       {/* 強み */}

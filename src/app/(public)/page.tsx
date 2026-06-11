@@ -111,6 +111,15 @@ export default async function HomePage() {
           </div>
           <div className="relative animate-fade-up [animation-delay:120ms]">
             <div className="absolute -inset-2 -z-10 rounded-[2rem] bg-gradient-to-br from-brand-200/50 to-accent-200/40 blur-2xl" />
+            {/* イメージイラスト: 寄り添う相談のイメージを直感的に伝える */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/hero-soudan.svg"
+              alt="スタッフが高齢者の住まい探しに寄り添うイラスト"
+              width={480}
+              height={360}
+              className="mx-auto -mb-4 w-full max-w-sm"
+            />
             <div className="rounded-3xl border border-white/60 bg-white/90 p-8 shadow-lift backdrop-blur">
               <p className="flex items-center gap-1.5 text-sm font-bold text-brand-600">
                 <Phone className="h-4 w-4" />お電話でのご相談
@@ -312,6 +321,15 @@ export default async function HomePage() {
       <section id="contact" className="bg-white py-16">
         <div className="mx-auto max-w-3xl px-4">
           <Reveal className="text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/consult-operator.svg"
+              alt=""
+              aria-hidden="true"
+              width={360}
+              height={300}
+              className="mx-auto mb-4 h-32 w-auto"
+            />
             <p className="section-eyebrow">無料相談フォーム</p>
             <h2 className="heading-underline text-2xl font-bold text-ink sm:text-3xl">
               まずはお気軽にご相談ください

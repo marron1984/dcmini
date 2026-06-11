@@ -17,9 +17,15 @@ export function FacilityCard({ facility }: { facility: Facility }) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <span className="text-sm font-semibold text-brand-400">
-            {facility.type ?? "高齢者住宅"}
-          </span>
+          // 写真未登録時は施設イメージイラストを表示
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src="/images/facility-placeholder.svg"
+            alt={`${facility.name}のイメージイラスト`}
+            width={400}
+            height={240}
+            className="h-full w-full object-cover"
+          />
         )}
       </div>
       <div className="flex flex-1 flex-col gap-3 p-5">

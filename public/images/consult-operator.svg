@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 300" role="img" aria-label="相談員がお電話でご相談をお受けするイラスト">
+  <!-- 背景 -->
+  <circle cx="180" cy="156" r="138" fill="#eff6ff"/>
+  <!-- 肩・上半身（制服） -->
+  <path d="M102 294 q0 -58 78 -58 q78 0 78 58 z" fill="#2563eb"/>
+  <path d="M168 238 h24 l-4 18 h-16 z" fill="#dbeafe"/>
+  <!-- 顔 -->
+  <circle cx="180" cy="152" r="44" fill="#f8d8c4"/>
+  <!-- 髪 -->
+  <path d="M136 148 a44 44 0 0 1 88 0 l0 8 q-10 -22 -44 -22 q-34 0 -44 22 z" fill="#5b3a29"/>
+  <circle cx="137" cy="170" r="11" fill="#5b3a29"/>
+  <circle cx="223" cy="170" r="11" fill="#5b3a29"/>
+  <!-- 表情 -->
+  <circle cx="165" cy="158" r="4" fill="#334155"/>
+  <circle cx="195" cy="158" r="4" fill="#334155"/>
+  <path d="M168 174 q12 10 24 0" stroke="#b4582f" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <circle cx="153" cy="168" r="6" fill="#fda4af" opacity="0.5"/>
+  <circle cx="207" cy="168" r="6" fill="#fda4af" opacity="0.5"/>
+  <!-- ヘッドセット -->
+  <path d="M134 142 a46 46 0 0 1 92 0" stroke="#1e293b" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <rect x="127" y="140" width="13" height="24" rx="6.5" fill="#1e293b"/>
+  <path d="M134 164 q4 26 32 28" stroke="#1e293b" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <circle cx="168" cy="192" r="5" fill="#1e293b"/>
+  <!-- 吹き出し（右上・ハート） -->
+  <g>
+    <rect x="250" y="46" width="78" height="56" rx="16" fill="#ffffff" stroke="#bfdbfe" stroke-width="2.5"/>
+    <path d="M262 98 l-8 16 l20 -12 z" fill="#ffffff"/>
+    <path d="M289 86 q-13 -11 -13 -19 a7.5 7.5 0 0 1 13 -5.5 a7.5 7.5 0 0 1 13 5.5 q0 8 -13 19 z" fill="#fb7185"/>
+  </g>
+  <!-- 吹き出し（左・返答） -->
+  <g>
+    <rect x="34" y="76" width="66" height="44" rx="14" fill="#ccfbf1"/>
+    <path d="M92 116 l10 14 l-22 -8 z" fill="#ccfbf1"/>
+    <circle cx="55" cy="98" r="4" fill="#0d9488"/>
+    <circle cx="67" cy="98" r="4" fill="#0d9488"/>
+    <circle cx="79" cy="98" r="4" fill="#0d9488"/>
+  </g>
+</svg>

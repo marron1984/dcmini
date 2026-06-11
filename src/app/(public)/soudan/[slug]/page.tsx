@@ -144,6 +144,15 @@ export default async function SoudanLpPage({
       <section id="contact" className="bg-white px-4 py-14">
         <div className="mx-auto max-w-3xl">
           <div className="text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/consult-operator.svg"
+              alt=""
+              aria-hidden="true"
+              width={360}
+              height={300}
+              className="mx-auto mb-4 h-32 w-auto"
+            />
             <p className="section-eyebrow">無料相談フォーム</p>
             <h2 className="text-2xl font-bold text-ink sm:text-3xl">
               この内容でご相談する

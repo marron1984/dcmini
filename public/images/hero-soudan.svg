@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" role="img" aria-label="スタッフが高齢者の住まい探しに寄り添うイラスト">
+  <!-- 背景 -->
+  <ellipse cx="240" cy="190" rx="232" ry="156" fill="#eff6ff"/>
+  <!-- 地面 -->
+  <path d="M16 292 Q240 262 464 292 L464 314 Q240 334 16 314 Z" fill="#ccfbf1"/>
+  <!-- 太陽 -->
+  <circle cx="78" cy="72" r="22" fill="#fde68a"/>
+  <circle cx="78" cy="72" r="13" fill="#fcd34d"/>
+  <!-- 木 -->
+  <rect x="86" y="232" width="10" height="56" rx="4" fill="#a16207" opacity="0.75"/>
+  <circle cx="91" cy="206" r="34" fill="#99f6e4"/>
+  <circle cx="70" cy="226" r="22" fill="#5eead4"/>
+  <circle cx="113" cy="224" r="20" fill="#2dd4bf"/>
+  <!-- 家 -->
+  <g>
+    <rect x="312" y="174" width="116" height="112" rx="8" fill="#ffffff" stroke="#bfdbfe" stroke-width="3"/>
+    <path d="M294 182 L370 110 L446 182 Z" fill="#2563eb"/>
+    <circle cx="370" cy="158" r="10" fill="#ffffff" opacity="0.9"/>
+    <rect x="354" y="226" width="34" height="60" rx="5" fill="#93c5fd"/>
+    <circle cx="382" cy="258" r="3.5" fill="#1d4ed8"/>
+    <rect x="326" y="196" width="24" height="24" rx="4" fill="#dbeafe" stroke="#bfdbfe" stroke-width="2"/>
+    <rect x="392" y="196" width="24" height="24" rx="4" fill="#dbeafe" stroke="#bfdbfe" stroke-width="2"/>
+  </g>
+  <!-- 人物の影 -->
+  <ellipse cx="196" cy="286" rx="52" ry="8" fill="#0f172a" opacity="0.06"/>
+  <!-- ハート -->
+  <path d="M196 140 q-10 -9 -10 -15.5 a6 6 0 0 1 10 -4.5 a6 6 0 0 1 10 4.5 q0 6.5 -10 15.5 z" fill="#fb7185"/>
+  <!-- スタッフ（左・制服） -->
+  <g>
+    <rect x="158" y="232" width="9" height="42" rx="4" fill="#1e40af"/>
+    <rect x="175" y="232" width="9" height="42" rx="4" fill="#1e40af"/>
+    <rect x="155" y="272" width="15" height="9" rx="4.5" fill="#334155"/>
+    <rect x="173" y="272" width="15" height="9" rx="4.5" fill="#334155"/>
+    <rect x="152" y="172" width="38" height="64" rx="17" fill="#3b82f6"/>
+    <line x1="184" y1="192" x2="206" y2="202" stroke="#3b82f6" stroke-width="11" stroke-linecap="round"/>
+    <circle cx="209" cy="203" r="5.5" fill="#f8d8c4"/>
+    <circle cx="171" cy="154" r="16" fill="#f8d8c4"/>
+    <path d="M155 152 a16 16 0 0 1 32 0 l0 3 q-4 -12 -16 -12 q-12 0 -16 12 z" fill="#7c4a2d"/>
+    <circle cx="166" cy="156" r="1.8" fill="#334155"/>
+    <circle cx="176" cy="156" r="1.8" fill="#334155"/>
+    <path d="M167 163 q4 3.5 8 0" stroke="#b4582f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  </g>
+  <!-- 高齢者（右・杖） -->
+  <g>
+    <rect x="208" y="238" width="9" height="38" rx="4" fill="#64748b"/>
+    <rect x="223" y="238" width="9" height="38" rx="4" fill="#64748b"/>
+    <rect x="205" y="274" width="15" height="9" rx="4.5" fill="#475569"/>
+    <rect x="221" y="274" width="15" height="9" rx="4.5" fill="#475569"/>
+    <rect x="201" y="184" width="37" height="58" rx="16" fill="#14b8a6"/>
+    <line x1="233" y1="202" x2="245" y2="214" stroke="#14b8a6" stroke-width="10" stroke-linecap="round"/>
+    <line x1="246" y1="214" x2="253" y2="280" stroke="#b45309" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="246" cy="214" r="5.5" fill="#f6cdb6"/>
+    <circle cx="219" cy="166" r="15" fill="#f6cdb6"/>
+    <path d="M204 164 a15 15 0 0 1 30 0 l0 3 q-4 -11 -15 -11 q-11 0 -15 11 z" fill="#cbd5e1"/>
+    <circle cx="232" cy="152" r="6.5" fill="#cbd5e1"/>
+    <circle cx="214" cy="168" r="1.8" fill="#334155"/>
+    <circle cx="224" cy="168" r="1.8" fill="#334155"/>
+    <path d="M215 175 q4 3.5 8 0" stroke="#b4582f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>
