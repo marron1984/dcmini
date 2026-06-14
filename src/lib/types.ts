@@ -58,6 +58,16 @@ export type LeadChannel =
 // 入居者ステータス
 export type ResidentStatus = "scheduled" | "residing" | "moved_out";
 
+// 契約種別・ステータス
+export type ContractType =
+  | "residency"
+  | "renewal"
+  | "important_matters"
+  | "memorandum"
+  | "other";
+
+export type ContractStatus = "draft" | "sent" | "signed" | "expired" | "cancelled";
+
 export interface AppUser {
   id: string;
   name: string;
@@ -225,6 +235,30 @@ export interface Resident {
   // join
   facility?: Pick<Facility, "id" | "name"> | null;
   room?: Pick<Room, "id" | "room_number"> | null;
+}
+
+export interface Contract {
+  id: string;
+  resident_id: string;
+  lead_id: string | null;
+  contract_type: ContractType;
+  title: string | null;
+  template_version: string | null;
+  generation: number;
+  renewal_of: string | null;
+  status: ContractStatus;
+  provider: string | null;
+  external_contract_id: string | null;
+  document_url: string | null;
+  signed_at: string | null;
+  effective_from: string | null;
+  effective_to: string | null;
+  amount: number | null;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+  // join
+  resident?: Pick<Resident, "id" | "name"> | null;
 }
 
 export interface LpFaqItem {

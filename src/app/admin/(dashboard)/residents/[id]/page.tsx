@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Building2, Users } from "lucide-react";
+import { ArrowLeft, Building2, Users, FileSignature } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResidentForm } from "@/components/admin/ResidentForm";
+import { ContractsManager } from "@/components/admin/ContractsManager";
 import { DeleteResidentButton } from "@/components/admin/DeleteResidentButton";
-import { getResident, getFacilities, getRooms } from "@/lib/data/admin";
-import { RESIDENT_STATUS_MAP } from "@/lib/constants";
+import { getResident, getFacilities, getRooms, getResidentContracts } from "@/lib/data/admin";
+import { RESIDENT_STATUS_MAP, CONTRACT_TYPE_MAP, CONTRACT_STATUS_MAP } from "@/lib/constants";
 import { formatDate, formatYen, cn } from "@/lib/utils";
 import { checkSectionAccess } from "@/lib/guard";
 import { ForbiddenCard } from "@/components/admin/ForbiddenCard";
@@ -30,7 +31,11 @@ export default async function ResidentDetailPage({ params }: { params: { id: str
   const canEdit = user != null && ["admin", "consultant"].includes(user.role);
   const status = RESIDENT_STATUS_MAP[resident.status];
 
-  const [facilities, rooms] = await Promise.all([getFacilities(), getRooms()]);
+  const [facilities, rooms, contracts] = await Promise.all([
+    getFacilities(),
+    getRooms(),
+    getResidentContracts(resident.id),
+  ]);
   const facilityOptions = facilities.map((f) => ({ id: f.id, name: f.name }));
   const roomOptions = rooms.map((r) => ({ id: r.id, room_number: r.room_number, facility_id: r.facility_id }));
 
@@ -113,6 +118,48 @@ export default async function ResidentDetailPage({ params }: { params: { id: str
                 <ResidentForm resident={resident} facilities={facilityOptions} rooms={roomOptions} />
               ) : (
                 <p className="text-sm text-ink-muted">編集権限がありません（閲覧のみ）。</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 契約管理台帳（世代管理） */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileSignature className="h-4 w-4 text-brand-500" />契約管理
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {canEdit ? (
+                <ContractsManager
+                  residentId={resident.id}
+                  leadId={resident.lead_id}
+                  contracts={contracts}
+                />
+              ) : contracts.length === 0 ? (
+                <p className="text-sm text-ink-muted">契約は登録されていません。</p>
+              ) : (
+                <ul className="space-y-2">
+                  {contracts.map((ct) => {
+                    const st = CONTRACT_STATUS_MAP[ct.status];
+                    return (
+                      <li key={ct.id} className="flex flex-wrap items-center gap-2 border-b border-slate-100 py-2 last:border-0 text-sm">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700">
+                          第{ct.generation}契約
+                        </span>
+                        <span className="font-semibold text-ink">{CONTRACT_TYPE_MAP[ct.contract_type]}</span>
+                        <span className={cn("inline-block rounded-full border px-2 py-0.5 text-xs font-semibold", st?.color)}>
+                          {st?.label ?? ct.status}
+                        </span>
+                        {ct.document_url && (
+                          <a href={ct.document_url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-brand-700 hover:underline">
+                            原本
+                          </a>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
             </CardContent>
           </Card>

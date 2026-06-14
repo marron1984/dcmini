@@ -59,7 +59,8 @@ src/
     ai.ts / ai-prompts.ts  AI連携（サーバー専用）/ プロンプト構築（純粋）
     csv.ts / utils.ts / audit.ts / constants.ts / types.ts
 supabase/migrations/  0001_init / 0002_rls / 0003_articles_audit / 0004_settings_keys / 0005_status_changed_at /
-                      0006_channels_residents（leads.channel=流入チャネル / residents=入居者台帳）
+                      0006_channels_residents（leads.channel=流入チャネル / residents=入居者台帳）/
+                      0007_contracts（contracts=契約管理台帳・世代管理。原本は電子契約側を正としリンク参照）
 supabase/seed.sql     デモデータ
 ```
 

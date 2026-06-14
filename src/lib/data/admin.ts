@@ -8,6 +8,7 @@ import type {
   AppUser,
   Referrer,
   Resident,
+  Contract,
   LpPage,
   Article,
   AuditLog,
@@ -486,6 +487,31 @@ export function computeResidentStats(residents: Pick<Resident, "status" | "month
   };
 }
 
+// =============================================================
+// 契約管理台帳（メタデータ＋世代管理。原本は電子契約側を正とする）
+// =============================================================
+
+export async function getResidentContracts(residentId: string): Promise<Contract[]> {
+  return safe(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("contracts")
+      .select("*")
+      .eq("resident_id", residentId)
+      .order("generation", { ascending: false })
+      .order("created_at", { ascending: false });
+    return (data as Contract[]) ?? [];
+  }, []);
+}
+
+export async function getContract(id: string): Promise<Contract | null> {
+  return safe(async () => {
+    const supabase = createClient();
+    const { data } = await supabase.from("contracts").select("*").eq("id", id).single();
+    return (data as Contract) ?? null;
+  }, null);
+}
+
 export interface AdReport {
   id: string;
   date: string;
@@ -547,7 +573,8 @@ export type NotificationCategory =
   | "tour_tomorrow"      // 見学前日
   | "next_action_due"    // 次回アクション期限
   | "stalled"            // 長期放置案件
-  | "reapproach";        // 失注リスク（再アプローチ予定日到来）
+  | "reapproach"         // 失注リスク（再アプローチ予定日到来）
+  | "contract_renewal";  // 契約更新期限（満了日が近い締結済契約）
 
 export interface NotificationItem {
   id: string;
@@ -569,9 +596,11 @@ export async function getNotifications(): Promise<NotificationItem[]> {
     const ms = (d: number) => d * 24 * 60 * 60 * 1000;
     const nowISO = now.toISOString();
     const soonISO = new Date(now.getTime() + ms(2)).toISOString();
+    // 契約更新は30日先まで先読み
+    const renewalHorizon = new Date(now.getTime() + ms(30)).toISOString().slice(0, 10);
 
     // 全管理ページのレイアウトで呼ばれるため、DB側で対象行を絞って取得する。
-    const [leadsRes, toursRes, actsRes] = await Promise.all([
+    const [leadsRes, toursRes, actsRes, contractsRes] = await Promise.all([
       // 完了案件(moved_in)は通知対象外。残りのみ取得。
       supabase
         .from("leads")
@@ -592,6 +621,15 @@ export async function getNotifications(): Promise<NotificationItem[]> {
         .lte("next_action_date", today)
         .order("created_at", { ascending: false })
         .limit(500),
+      // 満了が30日以内に迫った締結済契約（更新検討用）
+      supabase
+        .from("contracts")
+        .select("id, resident_id, contract_type, effective_to, status, resident:resident_id(id, name)")
+        .eq("status", "signed")
+        .not("effective_to", "is", null)
+        .lte("effective_to", renewalHorizon)
+        .order("effective_to", { ascending: true })
+        .limit(200),
     ]);
 
     const leads = (leadsRes.data as unknown as {
@@ -607,6 +645,11 @@ export async function getNotifications(): Promise<NotificationItem[]> {
     const acts = (actsRes.data as unknown as {
       id: string; lead_id: string; content: string;
       next_action_date: string | null; created_at: string;
+    }[]) ?? [];
+    const contracts = (contractsRes.data as unknown as {
+      id: string; resident_id: string; contract_type: string;
+      effective_to: string | null; status: string;
+      resident: { id: string; name: string } | null;
     }[]) ?? [];
 
     const items: NotificationItem[] = [];
@@ -707,6 +750,21 @@ export async function getNotifications(): Promise<NotificationItem[]> {
         href: `/admin/leads/${a.lead_id}`,
         date: a.next_action_date,
         severity: "medium",
+      });
+    }
+
+    // 契約更新期限（満了日が30日以内・締結済）。満了済みは高、未到来は中。
+    for (const c of contracts) {
+      if (!c.effective_to) continue;
+      const overdue = c.effective_to.slice(0, 10) < today;
+      items.push({
+        id: `contract-${c.id}`,
+        category: "contract_renewal",
+        title: overdue ? "契約満了（要更新）" : "契約更新が近づいています",
+        detail: `${c.resident?.name ?? "入居者"} 様（満了 ${c.effective_to}）`,
+        href: c.resident ? `/admin/residents/${c.resident.id}` : "/admin/residents",
+        date: c.effective_to,
+        severity: overdue ? "high" : "medium",
       });
     }
 

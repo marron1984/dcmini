@@ -12,6 +12,8 @@ import type {
   UserRole,
   LeadChannel,
   ResidentStatus,
+  ContractType,
+  ContractStatus,
 } from "./types";
 
 export const SITE_NAME = "DCかいご相談ダイヤル";
@@ -116,6 +118,33 @@ export const RESIDENT_STATUS_MAP: Record<ResidentStatus, { label: string; color:
   Object.fromEntries(
     RESIDENT_STATUSES.map((s) => [s.value, { label: s.label, color: s.color }])
   ) as Record<ResidentStatus, { label: string; color: string }>;
+
+// ---- 契約種別 ----
+export const CONTRACT_TYPES: { value: ContractType; label: string }[] = [
+  { value: "residency", label: "入居契約" },
+  { value: "renewal", label: "更新契約" },
+  { value: "important_matters", label: "重要事項説明書" },
+  { value: "memorandum", label: "覚書" },
+  { value: "other", label: "その他" },
+];
+
+export const CONTRACT_TYPE_MAP: Record<ContractType, string> = Object.fromEntries(
+  CONTRACT_TYPES.map((t) => [t.value, t.label])
+) as Record<ContractType, string>;
+
+// ---- 契約ステータス ----
+export const CONTRACT_STATUSES: { value: ContractStatus; label: string; color: string }[] = [
+  { value: "draft", label: "下書き", color: "bg-slate-100 text-slate-700 border-slate-200" },
+  { value: "sent", label: "送信済", color: "bg-amber-100 text-amber-800 border-amber-200" },
+  { value: "signed", label: "締結済", color: "bg-emerald-600 text-white border-emerald-700" },
+  { value: "expired", label: "失効", color: "bg-slate-200 text-slate-600 border-slate-300" },
+  { value: "cancelled", label: "解約", color: "bg-rose-100 text-rose-700 border-rose-200" },
+];
+
+export const CONTRACT_STATUS_MAP: Record<ContractStatus, { label: string; color: string }> =
+  Object.fromEntries(
+    CONTRACT_STATUSES.map((s) => [s.value, { label: s.label, color: s.color }])
+  ) as Record<ContractStatus, { label: string; color: string }>;
 
 // ---- 対応履歴種別 ----
 export const ACTIVITY_TYPES: { value: ActivityType; label: string }[] = [
@@ -292,6 +321,7 @@ export const NOTIFICATION_CATEGORIES: Record<
   next_action_due: { label: "次回アクション期限", color: "bg-amber-100 text-amber-800" },
   stalled: { label: "長期放置案件", color: "bg-slate-200 text-slate-700" },
   reapproach: { label: "再アプローチ予定", color: "bg-purple-100 text-purple-800" },
+  contract_renewal: { label: "契約更新期限", color: "bg-indigo-100 text-indigo-800" },
 };
 
 // トップページFAQ（表示と構造化データJSON-LDで共用）

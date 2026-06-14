@@ -64,3 +64,12 @@ values
    (select id from facilities where name = 'グリーンライフ東淀川' limit 1),
    '退院に合わせて入居予定。医療連携を確認済み。')
 on conflict do nothing;
+
+-- デモ用契約（入居者名で参照。原本は電子契約側を正とし、ここはリンク台帳）
+insert into contracts (resident_id, contract_type, title, template_version, generation,
+  status, provider, signed_at, effective_from, effective_to, amount, note)
+select id, 'residency', '入居契約書（サンライズ西淀川）', 'v2025.4', 1,
+  'signed', '自社サインシステム',
+  current_date - 90, current_date - 90, current_date + 20, 132000,
+  '電子契約で締結済。満了が近づくと更新通知が出ます。'
+from residents where name = '田中 一郎' limit 1;

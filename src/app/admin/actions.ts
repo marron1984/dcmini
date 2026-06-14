@@ -506,6 +506,117 @@ export async function createResidentFromLead(leadId: string) {
   return { ok: true, id: created?.id as string, existed: false };
 }
 
+// ---- 契約管理台帳（メタデータ＋世代管理）----
+const CONTRACT_TYPE_VALUES = ["residency", "renewal", "important_matters", "memorandum", "other"];
+const CONTRACT_STATUS_VALUES = ["draft", "sent", "signed", "expired", "cancelled"];
+
+export async function upsertContract(formData: FormData) {
+  await assertCanEdit();
+  const supabase = createClient();
+  const id = (formData.get("id") as string) || null;
+  const residentId = (formData.get("resident_id") as string) || null;
+
+  const str = (k: string) => {
+    const v = (formData.get(k) as string)?.trim();
+    return v ? v : null;
+  };
+  const num = (k: string) => parseLooseInt(formData.get(k) as string);
+
+  if (!residentId) return { ok: false, error: "入居者が指定されていません" };
+
+  const contractType = (formData.get("contract_type") as string) || "residency";
+  const status = (formData.get("status") as string) || "draft";
+
+  const record = {
+    resident_id: residentId,
+    lead_id: str("lead_id"),
+    contract_type: CONTRACT_TYPE_VALUES.includes(contractType) ? contractType : "residency",
+    title: str("title"),
+    template_version: str("template_version"),
+    generation: num("generation") ?? 1,
+    status: CONTRACT_STATUS_VALUES.includes(status) ? status : "draft",
+    provider: str("provider") ?? "自社サインシステム",
+    external_contract_id: str("external_contract_id"),
+    document_url: str("document_url"),
+    signed_at: str("signed_at"),
+    effective_from: str("effective_from"),
+    effective_to: str("effective_to"),
+    amount: num("amount"),
+    note: str("note"),
+  };
+
+  if (id) {
+    const { error } = await supabase.from("contracts").update(record).eq("id", id);
+    if (error) return { ok: false, error: error.message };
+  } else {
+    const { error } = await supabase.from("contracts").insert(record);
+    if (error) return { ok: false, error: error.message };
+  }
+  await logAction(id ? "contract.update" : "contract.create", {
+    entity: "contract",
+    entityId: id,
+    detail: { residentId, type: record.contract_type, status: record.status },
+  });
+  revalidatePath(`/admin/residents/${residentId}`);
+  return { ok: true };
+}
+
+export async function deleteContract(id: string, residentId: string) {
+  await assertCanEdit();
+  const supabase = createClient();
+  const { error } = await supabase.from("contracts").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  await logAction("contract.delete", { entity: "contract", entityId: id, detail: { residentId } });
+  revalidatePath(`/admin/residents/${residentId}`);
+  return { ok: true };
+}
+
+// 既存契約から次世代（更新契約）を作成。世代・期間・金額を引き継ぐ。
+export async function createRenewalContract(contractId: string) {
+  await assertCanEdit();
+  const supabase = createClient();
+
+  const { data: prev } = await supabase
+    .from("contracts")
+    .select("*")
+    .eq("id", contractId)
+    .single();
+  if (!prev) return { ok: false, error: "元の契約が見つかりません" };
+
+  // 旧契約の満了日翌日を新契約の開始日に（同一期間を1年延長して提案）
+  const nextFrom = prev.effective_to
+    ? new Date(new Date(prev.effective_to).getTime() + 24 * 60 * 60 * 1000)
+    : null;
+  const nextTo = nextFrom
+    ? new Date(nextFrom.getTime()).setFullYear(nextFrom.getFullYear() + 1)
+    : null;
+
+  const record = {
+    resident_id: prev.resident_id,
+    lead_id: prev.lead_id,
+    contract_type: "renewal" as const,
+    title: prev.title,
+    template_version: prev.template_version,
+    generation: (prev.generation ?? 1) + 1,
+    renewal_of: prev.id,
+    status: "draft" as const,
+    provider: prev.provider,
+    amount: prev.amount,
+    effective_from: nextFrom ? nextFrom.toISOString().slice(0, 10) : null,
+    effective_to: nextTo ? new Date(nextTo).toISOString().slice(0, 10) : null,
+  };
+
+  const { error } = await supabase.from("contracts").insert(record);
+  if (error) return { ok: false, error: error.message };
+  await logAction("contract.renew", {
+    entity: "contract",
+    entityId: contractId,
+    detail: { residentId: prev.resident_id, generation: record.generation },
+  });
+  revalidatePath(`/admin/residents/${prev.resident_id}`);
+  return { ok: true };
+}
+
 // ---- 広告レポート（17）----
 export async function upsertAdReport(formData: FormData) {
   await assertCanManageAds();
