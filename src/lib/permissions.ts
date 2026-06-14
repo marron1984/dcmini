@@ -12,6 +12,7 @@ export type Section =
   | "facilities"
   | "rooms"
   | "tours"
+  | "residents"
   | "referrers"
   | "ads"
   | "lp"
@@ -27,6 +28,7 @@ const ACCESS: Record<Section, UserRole[]> = {
   facilities: ["admin", "consultant", "viewer"],
   rooms: ["admin", "consultant", "viewer"],
   tours: ["admin", "consultant", "viewer"],
+  residents: ["admin", "consultant", "viewer"],
   referrers: ["admin", "consultant"],
   ads: ["admin", "ad_manager"],
   lp: ["admin", "ad_manager"],

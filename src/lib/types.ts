@@ -44,6 +44,20 @@ export type ReferrerType =
 
 export type TourResult = "pending" | "positive" | "neutral" | "negative";
 
+// 流入チャネル（集客経路）
+export type LeadChannel =
+  | "web"
+  | "phone"
+  | "care_manager"
+  | "medical"
+  | "regional"
+  | "agency"
+  | "repeat"
+  | "other";
+
+// 入居者ステータス
+export type ResidentStatus = "scheduled" | "residing" | "moved_out";
+
 export interface AppUser {
   id: string;
   name: string;
@@ -59,6 +73,7 @@ export interface Lead {
   status: LeadStatus;
   assigned_user_id: string | null;
   referrer_id: string | null;
+  channel: LeadChannel | null;
 
   consultant_name: string;
   consultant_name_kana: string | null;
@@ -185,6 +200,31 @@ export interface Referrer {
   last_contacted_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface Resident {
+  id: string;
+  lead_id: string | null;
+  facility_id: string | null;
+  room_id: string | null;
+  name: string;
+  name_kana: string | null;
+  age: number | null;
+  gender: string | null;
+  care_level: string | null;
+  status: ResidentStatus;
+  admission_date: string | null;
+  contract_date: string | null;
+  move_out_date: string | null;
+  monthly_fee: number | null;
+  guarantor: string | null;
+  emergency_contact: string | null;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+  // join
+  facility?: Pick<Facility, "id" | "name"> | null;
+  room?: Pick<Room, "id" | "room_number"> | null;
 }
 
 export interface LpFaqItem {

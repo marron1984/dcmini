@@ -50,3 +50,17 @@ values (
   now()
 )
 on conflict (slug) do nothing;
+
+-- デモ用入居者（施設名で施設を参照）
+insert into residents (name, name_kana, age, gender, care_level, status,
+  admission_date, contract_date, monthly_fee, guarantor, emergency_contact, facility_id, note)
+values
+  ('田中 一郎', 'タナカ イチロウ', 84, '男性', '要介護3', 'residing',
+   current_date - 90, current_date - 100, 132000, '田中 花子（長女）', '090-1111-2222',
+   (select id from facilities where name = 'サンライズ西淀川' limit 1),
+   '生活保護受給。入居後落ち着いて生活されています。'),
+  ('佐藤 ハル', 'サトウ ハル', 88, '女性', '要介護4', 'scheduled',
+   current_date + 14, current_date - 3, 145000, '佐藤 健（長男）', '080-3333-4444',
+   (select id from facilities where name = 'グリーンライフ東淀川' limit 1),
+   '退院に合わせて入居予定。医療連携を確認済み。')
+on conflict do nothing;

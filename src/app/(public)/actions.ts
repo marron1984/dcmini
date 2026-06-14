@@ -46,6 +46,7 @@ export async function submitContact(
 
   const payload = {
     status: "new" as const,
+    channel: "web" as const, // 公開フォーム経由はWEB集客として記録
     consultant_name: consultantName.slice(0, 100),
     consultant_name_kana: str("consultant_name_kana"),
     consultant_phone: phone ? phone.slice(0, 30) : null,

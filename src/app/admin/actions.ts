@@ -6,8 +6,10 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logAction } from "@/lib/audit";
 import { parseLooseInt } from "@/lib/utils";
-import { LEAD_STATUS_MAP } from "@/lib/constants";
-import type { LeadStatus, RoomStatus, TourResult } from "@/lib/types";
+import { LEAD_STATUS_MAP, LEAD_CHANNELS } from "@/lib/constants";
+import type { LeadStatus, RoomStatus, TourResult, LeadChannel, ResidentStatus } from "@/lib/types";
+
+const CHANNEL_VALUES = LEAD_CHANNELS.map((c) => c.value) as string[];
 
 // 編集権限チェック（admin / consultant のみ書き込み可）
 async function assertCanEdit() {
@@ -80,6 +82,24 @@ export async function assignReferrer(leadId: string, referrerId: string | null) 
   if (error) return { ok: false, error: error.message };
   await logAction("lead.referrer_change", { entity: "lead", entityId: leadId, detail: { referrerId } });
   revalidatePath(`/admin/leads/${leadId}`);
+  return { ok: true };
+}
+
+// 流入チャネル（集客経路）を設定（KPI集計の根拠）
+export async function setLeadChannel(leadId: string, channel: LeadChannel | null) {
+  await assertCanEdit();
+  if (channel !== null && !CHANNEL_VALUES.includes(channel)) {
+    return { ok: false, error: "不正なチャネルです" };
+  }
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("leads")
+    .update({ channel })
+    .eq("id", leadId);
+  if (error) return { ok: false, error: error.message };
+  await logAction("lead.channel_change", { entity: "lead", entityId: leadId, detail: { channel } });
+  revalidatePath(`/admin/leads/${leadId}`);
+  revalidatePath("/admin/leads");
   return { ok: true };
 }
 
@@ -365,6 +385,125 @@ export async function upsertReferrer(formData: FormData) {
   revalidatePath("/admin/referrers");
   if (id) revalidatePath(`/admin/referrers/${id}`);
   return { ok: true };
+}
+
+// ---- 入居者管理 ----
+const RESIDENT_STATUS_VALUES: ResidentStatus[] = ["scheduled", "residing", "moved_out"];
+
+export async function upsertResident(formData: FormData) {
+  await assertCanEdit();
+  const supabase = createClient();
+  const id = (formData.get("id") as string) || null;
+
+  const str = (k: string) => {
+    const v = (formData.get(k) as string)?.trim();
+    return v ? v : null;
+  };
+  const num = (k: string) => parseLooseInt(formData.get(k) as string);
+
+  const status = (formData.get("status") as ResidentStatus) || "residing";
+
+  const record = {
+    name: str("name") ?? "",
+    name_kana: str("name_kana"),
+    age: num("age"),
+    gender: str("gender"),
+    care_level: str("care_level"),
+    lead_id: str("lead_id"),
+    facility_id: str("facility_id"),
+    room_id: str("room_id"),
+    status: RESIDENT_STATUS_VALUES.includes(status) ? status : "residing",
+    admission_date: str("admission_date"),
+    contract_date: str("contract_date"),
+    move_out_date: str("move_out_date"),
+    monthly_fee: num("monthly_fee"),
+    guarantor: str("guarantor"),
+    emergency_contact: str("emergency_contact"),
+    note: str("note"),
+  };
+
+  if (!record.name) return { ok: false, error: "入居者名を入力してください" };
+
+  if (id) {
+    const { error } = await supabase.from("residents").update(record).eq("id", id);
+    if (error) return { ok: false, error: error.message };
+  } else {
+    const { error } = await supabase.from("residents").insert(record);
+    if (error) return { ok: false, error: error.message };
+  }
+  await logAction(id ? "resident.update" : "resident.create", {
+    entity: "resident",
+    entityId: id,
+    detail: { name: record.name, status: record.status },
+  });
+  revalidatePath("/admin/residents");
+  if (id) revalidatePath(`/admin/residents/${id}`);
+  return { ok: true };
+}
+
+export async function deleteResident(id: string) {
+  await assertCanEdit();
+  const supabase = createClient();
+  const { error } = await supabase.from("residents").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  await logAction("resident.delete", { entity: "resident", entityId: id });
+  revalidatePath("/admin/residents");
+  return { ok: true };
+}
+
+// 案件（入居完了）から入居者レコードを作成。案件の入居予定者情報を引き継ぐ。
+export async function createResidentFromLead(leadId: string) {
+  await assertCanEdit();
+  const supabase = createClient();
+
+  // 既に同一案件由来の入居者がいれば、その編集画面へ誘導
+  const { data: existing } = await supabase
+    .from("residents")
+    .select("id")
+    .eq("lead_id", leadId)
+    .maybeSingle();
+  if (existing?.id) {
+    return { ok: true, id: existing.id as string, existed: true };
+  }
+
+  const { data: lead } = await supabase
+    .from("leads")
+    .select(
+      "id, resident_name, resident_age, resident_gender, care_level, has_guarantor, consultant_name, consultant_phone, desired_move_in_date, budget"
+    )
+    .eq("id", leadId)
+    .single();
+  if (!lead) return { ok: false, error: "案件が見つかりません" };
+
+  const record = {
+    lead_id: leadId,
+    name: (lead.resident_name as string) || (lead.consultant_name as string) || "（未入力）",
+    age: lead.resident_age ?? null,
+    gender: lead.resident_gender ?? null,
+    care_level: lead.care_level ?? null,
+    status: "scheduled" as ResidentStatus,
+    admission_date: null,
+    monthly_fee: lead.budget ?? null,
+    emergency_contact: lead.consultant_phone
+      ? `${lead.consultant_name ?? ""} ${lead.consultant_phone}`.trim()
+      : null,
+    note: lead.desired_move_in_date ? `希望入居時期: ${lead.desired_move_in_date}` : null,
+  };
+
+  const { data: created, error } = await supabase
+    .from("residents")
+    .insert(record)
+    .select("id")
+    .single();
+  if (error) return { ok: false, error: error.message };
+  await logAction("resident.create_from_lead", {
+    entity: "resident",
+    entityId: created?.id,
+    detail: { leadId },
+  });
+  revalidatePath("/admin/residents");
+  revalidatePath(`/admin/leads/${leadId}`);
+  return { ok: true, id: created?.id as string, existed: false };
 }
 
 // ---- 広告レポート（17）----

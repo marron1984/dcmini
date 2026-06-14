@@ -8,6 +8,7 @@ function makeLead(over: Partial<Lead> = {}): Lead {
     status: "new",
     assigned_user_id: null,
     referrer_id: null,
+    channel: null,
     consultant_name: "テスト",
     consultant_name_kana: null,
     consultant_phone: null,

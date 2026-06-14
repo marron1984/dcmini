@@ -14,6 +14,8 @@ import { LostReasonForm } from "@/components/admin/leads/LostReasonForm";
 import { TourForm } from "@/components/admin/TourForm";
 import { TourResultBadge } from "@/components/admin/StatusBadge";
 import { ReferrerSelect } from "@/components/admin/leads/ReferrerSelect";
+import { ChannelSelect } from "@/components/admin/leads/ChannelSelect";
+import { ResidentFromLeadButton } from "@/components/admin/leads/ResidentFromLeadButton";
 import { MatchList } from "@/components/admin/leads/MatchList";
 import { AiAssist } from "@/components/admin/leads/AiAssist";
 import { matchFacilities, scoreColor } from "@/lib/matching";
@@ -141,6 +143,14 @@ export default async function LeadDetailPage({
               <Row label="希望入居時期" value={lead.desired_move_in_date} />
               <Row label="月額予算" value={formatYen(lead.budget)} />
               <Row label="希望地域" value={lead.desired_area} />
+              {["contract_prep", "move_in_scheduled", "moved_in"].includes(lead.status) && (
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                  <ResidentFromLeadButton leadId={lead.id} />
+                  <p className="mt-1.5 text-xs text-ink-muted">
+                    入居者台帳に登録して、入居日・部屋・費用を管理できます。
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -151,7 +161,8 @@ export default async function LeadDetailPage({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="mb-4">
+              <div className="mb-4 space-y-4">
+                <ChannelSelect leadId={lead.id} channel={lead.channel} />
                 <ReferrerSelect
                   leadId={lead.id}
                   referrerId={lead.referrer_id}

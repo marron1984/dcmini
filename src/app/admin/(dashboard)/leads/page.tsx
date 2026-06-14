@@ -6,7 +6,7 @@ import { Input, Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getLeads, getStaffUsers, type LeadFilters } from "@/lib/data/admin";
 import { LeadsKanban } from "@/components/admin/LeadsKanban";
-import { LEAD_STATUSES, CARE_LEVELS } from "@/lib/constants";
+import { LEAD_STATUSES, CARE_LEVELS, LEAD_CHANNELS, LEAD_CHANNEL_MAP } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import type { Lead } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,7 @@ export default async function LeadsPage({
     welfare: searchParams.welfare,
     dementia: searchParams.dementia,
     area: searchParams.area,
+    channel: searchParams.channel,
   };
 
   const [leads, staff] = await Promise.all([getLeads(filters), getStaffUsers()]);
@@ -116,6 +117,12 @@ export default async function LeadsPage({
             <option key={c} value={c}>{c}</option>
           ))}
         </Select>
+        <Select name="channel" defaultValue={searchParams.channel ?? ""}>
+          <option value="">流入チャネル（全て）</option>
+          {LEAD_CHANNELS.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </Select>
         <div className="flex gap-2">
           <Select name="welfare" defaultValue={searchParams.welfare ?? ""} className="flex-1">
             <option value="">生保</option>
@@ -157,6 +164,7 @@ function LeadsTable({ leads }: { leads: Lead[] }) {
             <th className="px-4 py-3 font-semibold">入居予定者</th>
             <th className="px-4 py-3 font-semibold">状況</th>
             <th className="px-4 py-3 font-semibold">ステータス</th>
+            <th className="px-4 py-3 font-semibold">流入</th>
             <th className="px-4 py-3 font-semibold">担当</th>
             <th className="px-4 py-3 font-semibold">登録日</th>
           </tr>
@@ -188,6 +196,15 @@ function LeadsTable({ leads }: { leads: Lead[] }) {
                 </div>
               </td>
               <td className="px-4 py-3"><LeadStatusBadge status={l.status} /></td>
+              <td className="px-4 py-3">
+                {l.channel ? (
+                  <span className={cn("inline-block rounded-full border px-2 py-0.5 text-xs font-semibold", LEAD_CHANNEL_MAP[l.channel]?.color)}>
+                    {LEAD_CHANNEL_MAP[l.channel]?.label ?? l.channel}
+                  </span>
+                ) : (
+                  <span className="text-xs text-ink-muted">—</span>
+                )}
+              </td>
               <td className="px-4 py-3 text-ink-soft">{l.assigned_user?.name ?? "未割当"}</td>
               <td className="px-4 py-3 text-ink-muted">{formatDate(l.created_at)}</td>
             </tr>

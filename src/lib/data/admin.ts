@@ -7,10 +7,13 @@ import type {
   Tour,
   AppUser,
   Referrer,
+  Resident,
   LpPage,
   Article,
   AuditLog,
+  LeadChannel,
 } from "@/lib/types";
+import { LEAD_CHANNELS } from "@/lib/constants";
 
 // 検索語のサニタイズ。PostgRESTのor()フィルタ構文文字（, ( ) . :）と
 // LIKEワイルドカード（% _）、バックスラッシュを除去してフィルタ注入を防ぐ。
@@ -36,6 +39,7 @@ export interface LeadFilters {
   dementia?: string;
   area?: string;
   source?: string;
+  channel?: string;
 }
 
 export async function getLeads(filters: LeadFilters = {}): Promise<Lead[]> {
@@ -53,6 +57,7 @@ export async function getLeads(filters: LeadFilters = {}): Promise<Lead[]> {
     if (filters.dementia === "yes") query = query.eq("dementia_status", true);
     if (filters.area) query = query.ilike("desired_area", `%${sanitizeSearch(filters.area)}%`);
     if (filters.source) query = query.eq("utm_source", filters.source);
+    if (filters.channel) query = query.eq("channel", filters.channel);
     if (filters.q) {
       const q = sanitizeSearch(filters.q);
       query = query.or(
@@ -356,6 +361,129 @@ export async function getReferrer(id: string): Promise<Referrer | null> {
     const { data } = await supabase.from("referrers").select("*").eq("id", id).single();
     return (data as Referrer) ?? null;
   }, null);
+}
+
+// =============================================================
+// 流入チャネル別の集計（WEB集客 / 地域連携 / ケアマネ紹介 など）
+// =============================================================
+
+export interface ChannelStat {
+  channel: LeadChannel | "unknown";
+  label: string;
+  color: string;
+  lead_count: number;
+  tour_count: number;
+  moved_in_count: number;
+  conversion_rate: number; // 入居完了 / 相談数(%)
+}
+
+// 取得済みデータからチャネル別ファネルを算出（純粋関数・テスト容易化）
+export function computeChannelStats(
+  leads: Pick<Lead, "id" | "channel" | "status">[],
+  tours: { lead_id: string }[]
+): ChannelStat[] {
+  const leadChannel = new Map(leads.map((l) => [l.id, l.channel ?? "unknown"]));
+  const meta = new Map<string, { label: string; color: string }>(
+    LEAD_CHANNELS.map((c) => [c.value, { label: c.label, color: c.color }])
+  );
+  meta.set("unknown", { label: "未分類", color: "bg-slate-100 text-slate-500 border-slate-200" });
+
+  // 表示順は定義順 + 末尾に未分類
+  const order: (LeadChannel | "unknown")[] = [...LEAD_CHANNELS.map((c) => c.value), "unknown"];
+
+  return order
+    .map((channel) => {
+      const chLeads = leads.filter((l) => (l.channel ?? "unknown") === channel);
+      const movedIn = chLeads.filter((l) => l.status === "moved_in").length;
+      const tourCount = tours.filter((t) => leadChannel.get(t.lead_id) === channel).length;
+      const m = meta.get(channel)!;
+      return {
+        channel,
+        label: m.label,
+        color: m.color,
+        lead_count: chLeads.length,
+        tour_count: tourCount,
+        moved_in_count: movedIn,
+        conversion_rate:
+          chLeads.length > 0 ? Math.round((movedIn / chLeads.length) * 100) : 0,
+      };
+    })
+    .filter((s) => s.lead_count > 0);
+}
+
+export async function getChannelStats(): Promise<ChannelStat[]> {
+  return safe(async () => {
+    const supabase = createClient();
+    const [leadRes, tourRes] = await Promise.all([
+      supabase.from("leads").select("id, channel, status"),
+      supabase.from("tours").select("lead_id"),
+    ]);
+    const leads = (leadRes.data as Pick<Lead, "id" | "channel" | "status">[]) ?? [];
+    const tours = (tourRes.data as { lead_id: string }[]) ?? [];
+    return computeChannelStats(leads, tours);
+  }, []);
+}
+
+// =============================================================
+// 入居者管理（入居が決まった方の情報）
+// =============================================================
+
+export interface ResidentFilters {
+  q?: string;
+  status?: string;
+  facility?: string;
+}
+
+export async function getResidents(filters: ResidentFilters = {}): Promise<Resident[]> {
+  return safe(async () => {
+    const supabase = createClient();
+    let query = supabase
+      .from("residents")
+      .select("*, facility:facility_id(id, name), room:room_id(id, room_number)")
+      .order("admission_date", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false });
+
+    if (filters.status) query = query.eq("status", filters.status);
+    if (filters.facility) query = query.eq("facility_id", filters.facility);
+    if (filters.q) {
+      const q = sanitizeSearch(filters.q);
+      query = query.or(`name.ilike.%${q}%,name_kana.ilike.%${q}%`);
+    }
+
+    const { data } = await query.limit(500);
+    return (data as Resident[]) ?? [];
+  }, []);
+}
+
+export async function getResident(id: string): Promise<Resident | null> {
+  return safe(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("residents")
+      .select("*, facility:facility_id(id, name), room:room_id(id, room_number)")
+      .eq("id", id)
+      .single();
+    return (data as Resident) ?? null;
+  }, null);
+}
+
+export interface ResidentStats {
+  total: number;
+  residing: number;
+  scheduled: number;
+  movedOut: number;
+  monthlyRevenue: number; // 入居中の月額合計
+}
+
+export function computeResidentStats(residents: Pick<Resident, "status" | "monthly_fee">[]): ResidentStats {
+  const residing = residents.filter((r) => r.status === "residing");
+  return {
+    total: residents.length,
+    residing: residing.length,
+    scheduled: residents.filter((r) => r.status === "scheduled").length,
+    movedOut: residents.filter((r) => r.status === "moved_out").length,
+    monthlyRevenue: residing.reduce((sum, r) => sum + (r.monthly_fee ?? 0), 0),
+  };
 }
 
 export interface AdReport {

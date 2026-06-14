@@ -12,15 +12,17 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CountUp } from "@/components/ui/count-up";
 import { LeadStatusBadge } from "@/components/admin/StatusBadge";
-import { getDashboardStats, getReferrersWithStats } from "@/lib/data/admin";
+import { getDashboardStats, getReferrersWithStats, getChannelStats } from "@/lib/data/admin";
 import { LEAD_STATUSES } from "@/lib/constants";
-import { formatDateTime, relativeTime } from "@/lib/utils";
+import { formatDateTime, relativeTime, cn } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const [stats, referrers] = await Promise.all([
+  const [stats, referrers, channels] = await Promise.all([
     getDashboardStats(),
     getReferrersWithStats(),
+    getChannelStats(),
   ]);
+  const maxChannelLeads = Math.max(1, ...channels.map((c) => c.lead_count));
   const referrerRanking = [...referrers]
     .filter((r) => r.lead_count > 0)
     .sort((a, b) => b.lead_count - a.lead_count)
@@ -154,6 +156,56 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* 流入チャネル別（WEB集客 / 地域連携 / ケアマネ紹介 など）*/}
+      <div className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-brand-500" />
+              流入チャネル別の相談・成約
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {channels.length === 0 ? (
+              <p className="text-sm text-ink-muted">
+                流入チャネルが未記録です。案件詳細でチャネルを設定すると集計されます。
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {channels.map((c) => (
+                  <Link
+                    key={c.channel}
+                    href={c.channel === "unknown" ? "/admin/leads" : `/admin/leads?channel=${c.channel}`}
+                    className="block rounded-xl px-2 py-1.5 transition-colors hover:bg-slate-50"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className={cn("inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold", c.color)}>
+                        {c.label}
+                      </span>
+                      <span className="text-sm text-ink-soft">
+                        相談 <span className="font-bold text-ink">{c.lead_count}</span>
+                        <span className="mx-1.5 text-slate-300">|</span>
+                        見学 {c.tour_count}
+                        <span className="mx-1.5 text-slate-300">|</span>
+                        入居 <span className="font-semibold text-emerald-600">{c.moved_in_count}</span>
+                        <span className="mx-1.5 text-slate-300">|</span>
+                        成約率 <span className="font-semibold text-brand-700">{c.conversion_rate}%</span>
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent-400"
+                        style={{ width: `${(c.lead_count / maxChannelLeads) * 100}%` }}
+                      />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* 担当者別成績・紹介元ランキング */}

@@ -10,6 +10,8 @@ import type {
   ActivityType,
   TourResult,
   UserRole,
+  LeadChannel,
+  ResidentStatus,
 } from "./types";
 
 export const SITE_NAME = "DCかいご相談ダイヤル";
@@ -83,6 +85,37 @@ export const REFERRER_TYPES: { value: ReferrerType; label: string }[] = [
   { value: "line", label: "LINE" },
   { value: "existing_referral", label: "既存紹介" },
 ];
+
+// ---- 流入チャネル（集客経路）----
+// WEB集客・地域連携・ケアマネ紹介などを高レベルに分類しKPI集計に用いる。
+// 個別の紹介元（事業所・担当者）は referrers で別管理。
+export const LEAD_CHANNELS: { value: LeadChannel; label: string; color: string }[] = [
+  { value: "web", label: "WEB集客", color: "bg-blue-100 text-blue-800 border-blue-200" },
+  { value: "phone", label: "電話直入", color: "bg-sky-100 text-sky-800 border-sky-200" },
+  { value: "care_manager", label: "ケアマネ紹介", color: "bg-teal-100 text-teal-800 border-teal-200" },
+  { value: "medical", label: "医療機関紹介", color: "bg-cyan-100 text-cyan-800 border-cyan-200" },
+  { value: "regional", label: "地域連携", color: "bg-emerald-100 text-emerald-800 border-emerald-200" },
+  { value: "agency", label: "紹介会社", color: "bg-amber-100 text-amber-800 border-amber-200" },
+  { value: "repeat", label: "既存・口コミ", color: "bg-purple-100 text-purple-800 border-purple-200" },
+  { value: "other", label: "その他", color: "bg-slate-100 text-slate-700 border-slate-200" },
+];
+
+export const LEAD_CHANNEL_MAP: Record<LeadChannel, { label: string; color: string }> =
+  Object.fromEntries(
+    LEAD_CHANNELS.map((c) => [c.value, { label: c.label, color: c.color }])
+  ) as Record<LeadChannel, { label: string; color: string }>;
+
+// ---- 入居者ステータス ----
+export const RESIDENT_STATUSES: { value: ResidentStatus; label: string; color: string }[] = [
+  { value: "scheduled", label: "入居予定", color: "bg-amber-100 text-amber-800 border-amber-200" },
+  { value: "residing", label: "入居中", color: "bg-emerald-600 text-white border-emerald-700" },
+  { value: "moved_out", label: "退去", color: "bg-slate-200 text-slate-700 border-slate-300" },
+];
+
+export const RESIDENT_STATUS_MAP: Record<ResidentStatus, { label: string; color: string }> =
+  Object.fromEntries(
+    RESIDENT_STATUSES.map((s) => [s.value, { label: s.label, color: s.color }])
+  ) as Record<ResidentStatus, { label: string; color: string }>;
 
 // ---- 対応履歴種別 ----
 export const ACTIVITY_TYPES: { value: ActivityType; label: string }[] = [
