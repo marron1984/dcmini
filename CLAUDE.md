@@ -104,4 +104,7 @@ supabase/seed.sql     デモデータ
 - CSPは Report-Only で導入済み（`next.config.mjs`）。安定後に強制へ。
 - 第3フェーズのうち **AI（Anthropic Claude）連携は実装済み**（`src/lib/ai.ts` / `src/lib/ai-prompts.ts` /
   `src/app/admin/ai-actions.ts`、案件詳細の「AIアシスト」タブ）。`ANTHROPIC_API_KEY` 設定で有効化。
+- **電子契約Webhook受け口**は実装済み（`src/app/api/contracts/webhook/route.ts`、HMAC検証・
+  fail-closed・admin client）。仕様は `docs/contract-webhook.md`。`CONTRACTS_WEBHOOK_SECRET` で有効化。
+  片方向（契約システム→CRM）。CRMから署名依頼を作る双方向はフェーズ2。
 - 残るLINE/Google広告API/LINE WORKSは外部APIキー・アカウントが前提で未実装。
