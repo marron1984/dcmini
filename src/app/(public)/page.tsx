@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   Phone,
   MessageCircle,
@@ -111,14 +112,15 @@ export default async function HomePage() {
           </div>
           <div className="relative animate-fade-up [animation-delay:120ms]">
             <div className="absolute -inset-2 -z-10 rounded-[2rem] bg-gradient-to-br from-brand-200/50 to-accent-200/40 blur-2xl" />
-            {/* イメージイラスト: 寄り添う相談のイメージを直感的に伝える */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/hero-soudan.svg"
-              alt="スタッフが高齢者の住まい探しに寄り添うイラスト"
-              width={480}
-              height={360}
-              className="mx-auto -mb-4 w-full max-w-sm"
+            {/* 相談風景の写真で安心感を伝える（next/imageでVercel最適化配信） */}
+            <Image
+              src="/images/consult-couple.png"
+              alt="相談員にご夫婦が住まいの相談をしている様子"
+              width={1448}
+              height={1086}
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="mb-5 h-auto w-full rounded-3xl object-cover shadow-lift"
             />
             <div className="rounded-3xl border border-white/60 bg-white/90 p-8 shadow-lift backdrop-blur">
               <p className="flex items-center gap-1.5 text-sm font-bold text-brand-600">
@@ -285,6 +287,40 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* 5.5 私たちのサポート（写真で安心感を伝える） */}
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <Reveal className="text-center">
+          <p className="section-eyebrow">私たちのサポート</p>
+          <h2 className="heading-underline text-2xl font-bold text-ink sm:text-3xl">
+            ご相談から入居後まで、そばで支えます
+          </h2>
+        </Reveal>
+        <Reveal delay={100} className="mt-10 grid gap-6 sm:grid-cols-3">
+          {[
+            { src: "/images/home-visit.png", t: "ご自宅・病院へ訪問対応", d: "ご来店が難しい場合も、ご自宅や病院へお伺いしてご相談をお受けします。", alt: "相談員がご自宅を訪問し玄関で高齢者に挨拶している様子" },
+            { src: "/images/facility-reception.png", t: "施設見学に同行", d: "条件に合う施設を一緒に見学し、雰囲気や対応をその場で確認できます。", alt: "明るい施設の受付に立つスタッフ" },
+            { src: "/images/care-walking.png", t: "入居後も寄り添う", d: "入居後のお困りごとや住み替えのご相談も、引き続きサポートします。", alt: "介護スタッフが杖を使う高齢女性の歩行を介助している様子" },
+          ].map((c, i) => (
+            <Reveal key={c.t} delay={i * 120}>
+              <div className="group h-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-lift">
+                <Image
+                  src={c.src}
+                  alt={c.alt}
+                  width={1448}
+                  height={1086}
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                  className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="p-5">
+                  <h3 className="font-bold text-ink">{c.t}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{c.d}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </Reveal>
+      </section>
+
       {/* 6. 施設・住宅一覧 */}
       {facilities.length > 0 && (
         <section className="mx-auto max-w-6xl px-4 py-16">
@@ -321,14 +357,13 @@ export default async function HomePage() {
       <section id="contact" className="bg-white py-16">
         <div className="mx-auto max-w-3xl px-4">
           <Reveal className="text-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/consult-operator.svg"
-              alt=""
-              aria-hidden="true"
-              width={360}
-              height={300}
-              className="mx-auto mb-4 h-32 w-auto"
+            <Image
+              src="/images/operator.png"
+              alt="ヘッドセットを付けた相談員が電話で対応している様子"
+              width={1448}
+              height={1086}
+              sizes="112px"
+              className="mx-auto mb-4 h-28 w-28 rounded-full object-cover shadow-soft ring-4 ring-white"
             />
             <p className="section-eyebrow">無料相談フォーム</p>
             <h2 className="heading-underline text-2xl font-bold text-ink sm:text-3xl">

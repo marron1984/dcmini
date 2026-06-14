@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Train } from "lucide-react";
 import type { Facility } from "@/lib/types";
@@ -8,7 +9,7 @@ export function FacilityCard({ facility }: { facility: Facility }) {
     facility.rooms?.filter((r) => r.status === "vacant").length ?? null;
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-lift">
-      <div className="flex h-40 items-center justify-center overflow-hidden bg-gradient-to-br from-brand-50 to-accent-50/60">
+      <div className="relative flex h-40 items-center justify-center overflow-hidden bg-gradient-to-br from-brand-50 to-accent-50/60">
         {facility.photo_urls?.[0] ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -17,14 +18,13 @@ export function FacilityCard({ facility }: { facility: Facility }) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          // 写真未登録時は施設イメージイラストを表示
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src="/images/facility-placeholder.svg"
-            alt={`${facility.name}のイメージイラスト`}
-            width={400}
-            height={240}
-            className="h-full w-full object-cover"
+          // 写真未登録時は施設の受付イメージを表示
+          <Image
+            src="/images/facility-reception.png"
+            alt={`${facility.name}のイメージ`}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         )}
       </div>
