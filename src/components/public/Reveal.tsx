@@ -21,7 +21,11 @@ export function Reveal({
     const el = ref.current;
     if (!el) return;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    // IntersectionObserver 非対応環境では即時表示（コンテンツを隠したままにしない）
+    if (
+      typeof IntersectionObserver === "undefined" ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
       setVisible(true);
       return;
     }
@@ -44,7 +48,8 @@ export function Reveal({
       ref={ref}
       style={delay ? { transitionDelay: `${delay}ms` } : undefined}
       className={cn(
-        "transition-all duration-700 ease-out will-change-transform",
+        // js-reveal: JS無効時に noscript CSS（layout.tsx）で強制表示するためのフック
+        "js-reveal transition-all duration-700 ease-out will-change-transform",
         visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0",
         className
       )}

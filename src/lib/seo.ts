@@ -6,12 +6,19 @@
 
 import { SITE_NAME, SITE_DESCRIPTION } from "@/lib/constants";
 
+// 絶対URLの基点。NEXT_PUBLIC_SITE_URL 未設定でも本番(Vercel)では
+// 本番ドメインへフォールバックし、localhost がcanonicalに混入する事故を防ぐ。
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
 
 const ORG_ID = `${SITE_URL}/#organization`;
 const BUSINESS_ID = `${SITE_URL}/#business`;
 const LOGO = `${SITE_URL}/icon.svg`;
+// リッチリザルト用の代表画像（ラスタ画像。ロゴSVGは不可）
+const DEFAULT_IMAGE = `${SITE_URL}/images/consult-couple.png`;
 
 // パス → 絶対URL
 export function abs(path: string): string {
@@ -68,9 +75,10 @@ export function localBusinessLd(opts: {
     name: SITE_NAME,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
-    image: LOGO,
+    image: DEFAULT_IMAGE,
     telephone: opts.phone,
-    priceRange: "無料相談",
+    // schema.org仕様に沿った価格帯表記（相談は無料）
+    priceRange: "¥0",
     address: {
       "@type": "PostalAddress",
       addressRegion: "大阪府",
@@ -160,7 +168,8 @@ export function articleLd(a: {
     "@type": "BlogPosting",
     headline: a.title,
     description: a.excerpt ?? undefined,
-    image: a.image ?? undefined,
+    // 記事リッチリザルトはimage必須のため、カバー未設定時は代表画像で補完
+    image: a.image ?? DEFAULT_IMAGE,
     datePublished: a.publishedAt ?? undefined,
     dateModified: a.updatedAt ?? a.publishedAt ?? undefined,
     inLanguage: "ja-JP",

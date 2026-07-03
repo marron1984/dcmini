@@ -15,6 +15,10 @@ export function FacilityCard({ facility }: { facility: Facility }) {
           <img
             src={facility.photo_urls[0]}
             alt={facility.name}
+            width={400}
+            height={240}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (

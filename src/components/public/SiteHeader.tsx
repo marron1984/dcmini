@@ -59,7 +59,7 @@ export function SiteHeader({
             LINE相談
           </a>
           <a
-            href="#contact"
+            href="/#contact"
             className="hidden rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white shadow-soft hover:bg-brand-700 hover:shadow-lift active:scale-[0.98] sm:block"
           >
             無料で相談

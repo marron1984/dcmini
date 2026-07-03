@@ -56,7 +56,12 @@ export function ContactForm({ lpName }: { lpName?: string }) {
         router.push("/thanks");
       } else {
         setError(res.error ?? "送信に失敗しました。");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        // ページ最上部ではなく、エラーメッセージ自体へスクロール（フォームから離脱させない）
+        requestAnimationFrame(() => {
+          document
+            .getElementById("contact-form-error")
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
       }
     });
   }
@@ -85,7 +90,11 @@ export function ContactForm({ lpName }: { lpName?: string }) {
       </div>
 
       {error && (
-        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+        <div
+          id="contact-form-error"
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+        >
           {error}
         </div>
       )}

@@ -48,10 +48,12 @@ export default async function DynamicLpPage({
   const tel = settings.phone_number.replace(/[^0-9]/g, "");
   const audience = toLines(lp.target_audience);
   const problems = toLines(lp.problems);
+  // jsonbカラムはnullがあり得るため必ず配列に正規化（LPの実行時クラッシュ防止）
+  const faq = lp.faq ?? [];
 
   return (
     <>
-      {lp.faq.length > 0 && <JsonLd data={faqLd(lp.faq)} />}
+      {faq.length > 0 && <JsonLd data={faqLd(faq)} />}
       <Breadcrumbs items={[{ name: lp.title, path: `/lp/${params.slug}` }]} />
       <section className="bg-gradient-to-b from-brand-50 to-white px-4 pb-14 pt-8">
         <div className="mx-auto max-w-3xl text-center">
@@ -121,12 +123,12 @@ export default async function DynamicLpPage({
         </section>
       )}
 
-      {lp.faq.length > 0 && (
+      {faq.length > 0 && (
         <section className="bg-slate-50 px-4 py-12">
           <div className="mx-auto max-w-3xl">
             <h2 className="text-center text-2xl font-bold text-ink">よくある質問</h2>
             <div className="mt-8 space-y-3">
-              {lp.faq.map((f, i) => (
+              {faq.map((f, i) => (
                 <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5">
                   <p className="font-bold text-ink">{f.q}</p>
                   <p className="mt-2 text-ink-soft">{f.a}</p>

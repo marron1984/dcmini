@@ -39,7 +39,7 @@ export default async function ColumnListPage() {
               <div className="flex h-36 items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100">
                 {a.cover_image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={a.cover_image_url} alt={a.title} className="h-full w-full object-cover" />
+                  <img src={a.cover_image_url} alt={a.title} width={400} height={144} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                 ) : (
                   <span className="text-sm font-semibold text-brand-400">{a.category ?? "コラム"}</span>
                 )}

@@ -8,6 +8,16 @@ vi.mock("@/lib/supabase/admin", () => ({
   }),
 }));
 
+// next/headers はリクエスト外で呼ぶと例外になるためモック。
+// レート制限（同一IP 5回/分）に掛からないよう、呼び出しごとに別IPを返す。
+let ipCounter = 0;
+vi.mock("next/headers", () => ({
+  headers: () => ({
+    get: (key: string) =>
+      key === "x-forwarded-for" ? `10.0.0.${++ipCounter}` : null,
+  }),
+}));
+
 import { submitContact } from "@/app/(public)/actions";
 
 function form(fields: Record<string, string>): FormData {

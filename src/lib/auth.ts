@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { AppUser } from "@/lib/types";
 
@@ -45,7 +46,8 @@ export interface SiteSettings {
   google_ads_id: string;
 }
 
-export async function getSiteSettings(): Promise<SiteSettings> {
+// React.cache でリクエスト単位にメモ化（layout/page双方から呼ばれても1クエリ）
+export const getSiteSettings = cache(async function getSiteSettings(): Promise<SiteSettings> {
   const fallback: SiteSettings = {
     phone_number: process.env.NEXT_PUBLIC_PHONE_NUMBER ?? "0120-000-000",
     line_url:
@@ -72,4 +74,4 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   } catch {
     return fallback;
   }
-}
+});

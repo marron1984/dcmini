@@ -99,7 +99,8 @@ export function ResidentForm({
             </Select>
           </Field>
           <Field label="部屋">
-            <Select name="room_id" defaultValue={resident?.room_id ?? ""} disabled={!facilityId}>
+            {/* key で施設変更時にリセット（別施設の部屋IDが残るのを防ぐ） */}
+            <Select key={facilityId} name="room_id" defaultValue={resident?.room_id ?? ""} disabled={!facilityId}>
               <option value="">未選択</option>
               {roomOptions.map((r) => (
                 <option key={r.id} value={r.id}>{r.room_number}</option>

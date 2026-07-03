@@ -79,7 +79,7 @@ export default async function ArticlePage({
 
       {article.cover_image_url && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={article.cover_image_url} alt={article.title} className="mt-6 w-full rounded-2xl object-cover" />
+        <img src={article.cover_image_url} alt={article.title} width={768} height={432} loading="lazy" decoding="async" className="mt-6 h-auto w-full rounded-2xl object-cover" />
       )}
 
       <div className="mt-8 space-y-4 leading-relaxed text-ink-soft">

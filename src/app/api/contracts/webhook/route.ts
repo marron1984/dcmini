@@ -71,19 +71,33 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // crm_contract_id は UUID 形式のみ受理（不正値でのDBエラー→500を防ぐ）
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (payload.crm_contract_id && !UUID_RE.test(payload.crm_contract_id)) {
+    return NextResponse.json({ ok: false, error: "invalid crm_contract_id" }, { status: 422 });
+  }
+
   const supabase = createAdminClient();
 
   // 対象契約を特定（CRM側IDを優先、無ければ電子契約側ID）
-  const query = supabase.from("contracts").select("id, resident_id, external_contract_id");
+  const query = supabase.from("contracts").select("id, resident_id, external_contract_id, status");
   const { data: found, error: findErr } = payload.crm_contract_id
     ? await query.eq("id", payload.crm_contract_id).maybeSingle()
     : await query.eq("external_contract_id", payload.external_contract_id!).maybeSingle();
 
   if (findErr) {
-    return NextResponse.json({ ok: false, error: findErr.message }, { status: 500 });
+    console.error("contracts webhook find error", findErr);
+    return NextResponse.json({ ok: false, error: "internal error" }, { status: 500 });
   }
   if (!found) {
     return NextResponse.json({ ok: false, error: "contract not found" }, { status: 404 });
+  }
+
+  // 状態の巻き戻りを防ぐ（再送・順序入れ替わり対策）:
+  // 締結済(signed)を draft/sent へ戻すイベントは無視して成功を返す（冪等）
+  const RANK: Record<string, number> = { draft: 0, sent: 1, signed: 2, expired: 3, cancelled: 3 };
+  if (found.status === "signed" && RANK[nextStatus] < RANK.signed) {
+    return NextResponse.json({ ok: true, id: found.id, status: found.status, skipped: true });
   }
 
   // 反映内容（冪等：同じイベントを再送されても結果は同じ）
@@ -99,7 +113,8 @@ export async function POST(request: NextRequest) {
 
   const { error: updErr } = await supabase.from("contracts").update(update).eq("id", found.id);
   if (updErr) {
-    return NextResponse.json({ ok: false, error: updErr.message }, { status: 500 });
+    console.error("contracts webhook update error", updErr);
+    return NextResponse.json({ ok: false, error: "internal error" }, { status: 500 });
   }
 
   // 監査ログ（自動同期の証跡。Webhookはセッションが無いため admin client で直接記録）

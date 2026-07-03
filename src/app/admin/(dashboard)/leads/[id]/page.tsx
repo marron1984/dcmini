@@ -31,7 +31,7 @@ import {
   getFacilities,
   getReferrers,
 } from "@/lib/data/admin";
-import { ACTIVITY_TYPE_MAP } from "@/lib/constants";
+import { ACTIVITY_TYPE_MAP, LEAD_CHANNEL_MAP } from "@/lib/constants";
 import { formatDate, formatDateTime, formatYen } from "@/lib/utils";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -45,13 +45,24 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 
 const yn = (v: boolean | null) => (v === true ? "あり" : v === false ? "なし" : "—");
 
+// viewer 向け: 編集不可の案内（サーバー側の権限チェックとUIを一致させる）
+function ReadOnlyNotice() {
+  return (
+    <p className="rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-ink-muted">
+      編集権限がありません（閲覧のみ）。
+    </p>
+  );
+}
+
 export default async function LeadDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const { ok } = await checkSectionAccess("leads");
+  const { ok, user } = await checkSectionAccess("leads");
   if (!ok) return <ForbiddenCard />;
+  // viewer は閲覧のみ（編集UIを出さない。サーバー側の assertCanEdit と二層で一致）
+  const canEdit = user != null && ["admin", "consultant"].includes(user.role);
 
   const lead = await getLead(params.id);
   if (!lead) notFound();
@@ -93,16 +104,18 @@ export default async function LeadDetailPage({
         action={<LeadStatusBadge status={lead.status} />}
       />
 
-      <Card className="mb-6">
-        <CardContent>
-          <StatusAssignBar
-            leadId={lead.id}
-            status={lead.status}
-            assignedUserId={lead.assigned_user_id}
-            staff={staff}
-          />
-        </CardContent>
-      </Card>
+      {canEdit && (
+        <Card className="mb-6">
+          <CardContent>
+            <StatusAssignBar
+              leadId={lead.id}
+              status={lead.status}
+              assignedUserId={lead.assigned_user_id}
+              staff={staff}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* 左: サマリー */}
@@ -143,7 +156,7 @@ export default async function LeadDetailPage({
               <Row label="希望入居時期" value={lead.desired_move_in_date} />
               <Row label="月額予算" value={formatYen(lead.budget)} />
               <Row label="希望地域" value={lead.desired_area} />
-              {["contract_prep", "move_in_scheduled", "moved_in"].includes(lead.status) && (
+              {canEdit && ["contract_prep", "move_in_scheduled", "moved_in"].includes(lead.status) && (
                 <div className="mt-4 border-t border-slate-100 pt-4">
                   <ResidentFromLeadButton leadId={lead.id} />
                   <p className="mt-1.5 text-xs text-ink-muted">
@@ -161,14 +174,27 @@ export default async function LeadDetailPage({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 space-y-4">
-                <ChannelSelect leadId={lead.id} channel={lead.channel} />
-                <ReferrerSelect
-                  leadId={lead.id}
-                  referrerId={lead.referrer_id}
-                  referrers={referrers}
-                />
-              </div>
+              {canEdit ? (
+                <div className="mb-4 space-y-4">
+                  <ChannelSelect leadId={lead.id} channel={lead.channel} />
+                  <ReferrerSelect
+                    leadId={lead.id}
+                    referrerId={lead.referrer_id}
+                    referrers={referrers}
+                  />
+                </div>
+              ) : (
+                <>
+                  <Row
+                    label="流入チャネル"
+                    value={lead.channel ? LEAD_CHANNEL_MAP[lead.channel]?.label : null}
+                  />
+                  <Row
+                    label="紹介元"
+                    value={referrers.find((r) => r.id === lead.referrer_id)?.name}
+                  />
+                </>
+              )}
               <Row label="LP" value={lead.lp_name} />
               <Row label="utm_source" value={lead.utm_source} />
               <Row label="utm_medium" value={lead.utm_medium} />
@@ -189,9 +215,11 @@ export default async function LeadDetailPage({
                     label: "対応履歴",
                     content: (
                       <div className="space-y-6">
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                          <ActivityForm leadId={lead.id} />
-                        </div>
+                        {canEdit && (
+                          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <ActivityForm leadId={lead.id} />
+                          </div>
+                        )}
                         <ul className="space-y-3">
                           {activities.length === 0 && (
                             <li className="text-sm text-ink-muted">まだ履歴がありません。</li>
@@ -219,7 +247,11 @@ export default async function LeadDetailPage({
                   {
                     id: "hearing",
                     label: "ヒアリング",
-                    content: <HearingForm leadId={lead.id} initial={lead.hearing} />,
+                    content: canEdit ? (
+                      <HearingForm leadId={lead.id} initial={lead.hearing} />
+                    ) : (
+                      <ReadOnlyNotice />
+                    ),
                   },
                   {
                     id: "matching",
@@ -234,16 +266,18 @@ export default async function LeadDetailPage({
                   {
                     id: "edit",
                     label: "基本情報の編集",
-                    content: <LeadEditForm lead={lead} />,
+                    content: canEdit ? <LeadEditForm lead={lead} /> : <ReadOnlyNotice />,
                   },
                   {
                     id: "proposals",
                     label: `施設提案 (${proposals.length})`,
                     content: (
                       <div className="space-y-5">
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                          <ProposalForm leadId={lead.id} facilities={facilityOptions} />
-                        </div>
+                        {canEdit && (
+                          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <ProposalForm leadId={lead.id} facilities={facilityOptions} />
+                          </div>
+                        )}
                         <ul className="space-y-2">
                           {proposals.length === 0 && (
                             <li className="text-sm text-ink-muted">提案施設はまだありません。</li>
@@ -268,9 +302,11 @@ export default async function LeadDetailPage({
                     label: `見学 (${tours.length})`,
                     content: (
                       <div className="space-y-5">
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                          <TourForm fixedLeadId={lead.id} facilities={facilityOptions} staff={staff} />
-                        </div>
+                        {canEdit && (
+                          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <TourForm fixedLeadId={lead.id} facilities={facilityOptions} staff={staff} />
+                          </div>
+                        )}
                         <ul className="space-y-2">
                           {tours.length === 0 && (
                             <li className="text-sm text-ink-muted">見学予定はありません。</li>
@@ -292,7 +328,7 @@ export default async function LeadDetailPage({
                   {
                     id: "lost",
                     label: "失注登録",
-                    content: (
+                    content: canEdit ? (
                       <div className="max-w-md">
                         <p className="mb-4 text-sm text-ink-soft">
                           失注理由と再アプローチ予定日を登録します。ステータスは「失注」になります。
@@ -303,6 +339,8 @@ export default async function LeadDetailPage({
                           currentReapproach={lead.reapproach_date}
                         />
                       </div>
+                    ) : (
+                      <ReadOnlyNotice />
                     ),
                   },
                 ]}

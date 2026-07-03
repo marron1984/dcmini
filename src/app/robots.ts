@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/seo";
 
 // 32. 管理画面は外部から検索されないこと / 公開ページはSEO対応
+// ベースURLは seo.ts の SITE_URL に一元化（env未設定時のフォールバック含め一致させる）
 export default function robots(): MetadataRoute.Robots {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "";
   return {
     rules: [
       {
@@ -11,6 +12,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin", "/admin/", "/thanks"],
       },
     ],
-    sitemap: base ? `${base}/sitemap.xml` : undefined,
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

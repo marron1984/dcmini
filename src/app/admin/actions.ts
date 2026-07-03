@@ -38,10 +38,23 @@ export async function signOut() {
 // ---- 案件 ----
 export async function updateLeadStatus(leadId: string, status: LeadStatus) {
   const user = await assertCanEdit();
+  // 失注は理由の記録が必須のため、専用フロー（setLostReason）経由に限定する
+  if (status === "lost") {
+    return {
+      ok: false,
+      error: "失注にする場合は「失注登録」タブから理由を添えて登録してください",
+    };
+  }
   const supabase = createClient();
   const { error } = await supabase
     .from("leads")
-    .update({ status, status_changed_at: new Date().toISOString() })
+    // 失注から復帰する場合は失注理由・再アプローチ日をクリア（古い情報の残留防止）
+    .update({
+      status,
+      status_changed_at: new Date().toISOString(),
+      lost_reason: null,
+      reapproach_date: null,
+    })
     .eq("id", leadId);
   if (error) return { ok: false, error: error.message };
   // ステータス変更を履歴に残す（変更先のラベル付きでタイムラインに表示される）
@@ -444,6 +457,18 @@ export async function upsertResident(formData: FormData) {
 export async function deleteResident(id: string) {
   await assertCanEdit();
   const supabase = createClient();
+  // 締結済みの契約台帳がある入居者は削除不可（FKのcascadeで契約記録が消えるため）
+  const { count } = await supabase
+    .from("contracts")
+    .select("id", { count: "exact", head: true })
+    .eq("resident_id", id)
+    .eq("status", "signed");
+  if (count && count > 0) {
+    return {
+      ok: false,
+      error: `締結済みの契約が${count}件あるため削除できません。先に契約を整理してください。`,
+    };
+  }
   const { error } = await supabase.from("residents").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
   await logAction("resident.delete", { entity: "resident", entityId: id });
@@ -496,6 +521,14 @@ export async function createResidentFromLead(leadId: string) {
     .select("id")
     .single();
   if (error) return { ok: false, error: error.message };
+  // 案件のタイムラインに変換の痕跡を残す
+  const editor = await getCurrentUser();
+  await supabase.from("lead_activities").insert({
+    lead_id: leadId,
+    user_id: editor?.id ?? null,
+    activity_type: "note",
+    content: "入居者台帳に登録しました",
+  });
   await logAction("resident.create_from_lead", {
     entity: "resident",
     entityId: created?.id,

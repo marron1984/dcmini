@@ -35,7 +35,7 @@ describe("localBusinessLd", () => {
     const ld = localBusinessLd({ phone: "0120-000-000", businessHours: "9:00〜18:00" });
     expect(ld["@type"]).toBe("LocalBusiness");
     expect(ld.telephone).toBe("0120-000-000");
-    expect(ld.priceRange).toBe("無料相談");
+    expect(ld.priceRange).toBe("¥0");
     expect(Array.isArray(ld.areaServed)).toBe(true);
     expect(ld.openingHoursSpecification).toBeTruthy();
   });

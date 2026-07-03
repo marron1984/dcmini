@@ -15,6 +15,7 @@ import type {
   LeadChannel,
 } from "@/lib/types";
 import { LEAD_CHANNELS } from "@/lib/constants";
+import { jstToday, jstStartOfMonth } from "@/lib/utils";
 
 // 検索語のサニタイズ。PostgRESTのor()フィルタ構文文字（, ( ) . :）と
 // LIKEワイルドカード（% _）、バックスラッシュを除去してフィルタ注入を防ぐ。
@@ -23,10 +24,12 @@ function sanitizeSearch(input: string): string {
 }
 
 // 共通: クエリ失敗時は空にフォールバック（Supabase未設定でもUIが表示される）
+// 失敗はログに残す（本番で「0件」に化けた障害を検知できるように）
 async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await fn();
-  } catch {
+  } catch (e) {
+    console.error("[data/admin] query failed, returning fallback:", e);
     return fallback;
   }
 }
@@ -144,7 +147,8 @@ export async function getFacilities(): Promise<Facility[]> {
     const { data } = await supabase
       .from("facilities")
       .select("*, rooms(*)")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(300);
     return (data as Facility[]) ?? [];
   }, []);
 }
@@ -167,7 +171,8 @@ export async function getRooms(): Promise<Room[]> {
     const { data } = await supabase
       .from("rooms")
       .select("*, facility:facility_id(id, name)")
-      .order("updated_at", { ascending: false });
+      .order("updated_at", { ascending: false })
+      .limit(2000);
     return (data as Room[]) ?? [];
   }, []);
 }
@@ -180,7 +185,8 @@ export async function getTours(): Promise<Tour[]> {
       .select(
         "*, lead:lead_id(id, consultant_name, resident_name), facility:facility_id(id, name), staff:staff_id(id, name)"
       )
-      .order("scheduled_at", { ascending: false });
+      .order("scheduled_at", { ascending: false })
+      .limit(500);
     return (data as Tour[]) ?? [];
   }, []);
 }
@@ -207,10 +213,8 @@ export function computeDashboardStats(
   tours: Tour[],
   now: Date = new Date()
 ): DashboardStats {
-  const startOfMonth = new Date(now);
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-  const startMs = startOfMonth.getTime();
+  // 月初は日本時間基準（サーバーがUTCでも日本の業務月と一致させる）
+  const startMs = jstStartOfMonth(now).getTime();
   const nowMs = now.getTime();
   // 日時文字列を安全に数値化（フォーマット/TZ差異に依存しない比較のため）
   const ts = (v?: string | null) => (v ? new Date(v).getTime() : 0);
@@ -271,15 +275,20 @@ export function computeDashboardStats(
 export async function getDashboardStats(): Promise<DashboardStats> {
   return safe(async () => {
     const supabase = createClient();
+    // 見学は集計に必要な「今月以降」だけに絞る（全件取得を避ける）
+    const startOfMonthISO = jstStartOfMonth().toISOString();
     const [leadsRes, roomsRes, toursRes] = await Promise.all([
       supabase.from("leads").select("id, status, created_at, updated_at, status_changed_at, consultant_name, resident_name, assigned_user:assigned_user_id(id, name)"),
       supabase.from("rooms").select("id, status"),
-      supabase.from("tours").select("*, lead:lead_id(id, consultant_name, resident_name), facility:facility_id(id, name)"),
+      supabase
+        .from("tours")
+        .select("id, scheduled_at, lead:lead_id(id, consultant_name, resident_name), facility:facility_id(id, name)")
+        .gte("scheduled_at", startOfMonthISO),
     ]);
 
     const leads = (leadsRes.data as unknown as Lead[]) ?? [];
     const rooms = (roomsRes.data as { id: string; status: string }[]) ?? [];
-    const tours = (toursRes.data as Tour[]) ?? [];
+    const tours = (toursRes.data as unknown as Tour[]) ?? [];
 
     return computeDashboardStats(leads, rooms, tours);
   }, {
@@ -322,24 +331,31 @@ export async function getReferrersWithStats(): Promise<ReferrerWithStats[]> {
     const leads = (leadRes.data as Pick<Lead, "id" | "referrer_id" | "status">[]) ?? [];
     const tours = (tourRes.data as { id: string; lead_id: string }[]) ?? [];
 
-    // lead_id → referrer_id の対応
+    // 単一パスで紹介元ごとに集計（紹介元×案件の総当たりを避ける）
     const leadToRef = new Map(leads.map((l) => [l.id, l.referrer_id]));
+    const leadAgg = new Map<string, { leads: number; moved: number }>();
+    for (const l of leads) {
+      if (!l.referrer_id) continue;
+      const e = leadAgg.get(l.referrer_id) ?? { leads: 0, moved: 0 };
+      e.leads += 1;
+      if (l.status === "moved_in") e.moved += 1;
+      leadAgg.set(l.referrer_id, e);
+    }
+    const tourAgg = new Map<string, number>();
+    for (const t of tours) {
+      const ref = leadToRef.get(t.lead_id);
+      if (ref) tourAgg.set(ref, (tourAgg.get(ref) ?? 0) + 1);
+    }
 
     return referrers.map((r) => {
-      const refLeads = leads.filter((l) => l.referrer_id === r.id);
-      const tourCount = tours.filter(
-        (t) => leadToRef.get(t.lead_id) === r.id
-      ).length;
-      const contractCount = refLeads.filter((l) => l.status === "moved_in").length;
+      const agg = leadAgg.get(r.id) ?? { leads: 0, moved: 0 };
       return {
         ...r,
-        lead_count: refLeads.length,
-        tour_count: tourCount,
-        contract_count: contractCount,
+        lead_count: agg.leads,
+        tour_count: tourAgg.get(r.id) ?? 0,
+        contract_count: agg.moved,
         conversion_rate:
-          refLeads.length > 0
-            ? Math.round((contractCount / refLeads.length) * 100)
-            : 0,
+          agg.leads > 0 ? Math.round((agg.moved / agg.leads) * 100) : 0,
       };
     });
   }, []);
@@ -351,7 +367,8 @@ export async function getReferrers(): Promise<Referrer[]> {
     const { data } = await supabase
       .from("referrers")
       .select("*")
-      .order("name");
+      .order("name")
+      .limit(1000);
     return (data as Referrer[]) ?? [];
   }, []);
 }
@@ -550,7 +567,8 @@ export async function getLpPages(): Promise<LpPage[]> {
     const { data } = await supabase
       .from("lp_pages")
       .select("*")
-      .order("updated_at", { ascending: false });
+      .order("updated_at", { ascending: false })
+      .limit(300);
     return (data as LpPage[]) ?? [];
   }, []);
 }
@@ -592,12 +610,13 @@ export async function getNotifications(): Promise<NotificationItem[]> {
   return safe(async () => {
     const supabase = createClient();
     const now = new Date();
-    const today = now.toISOString().slice(0, 10);
+    // 期日比較はJSTの「今日」を基準にする（UTC日付だと朝9時まで前日扱いになる）
+    const today = jstToday(now);
     const ms = (d: number) => d * 24 * 60 * 60 * 1000;
     const nowISO = now.toISOString();
     const soonISO = new Date(now.getTime() + ms(2)).toISOString();
     // 契約更新は30日先まで先読み
-    const renewalHorizon = new Date(now.getTime() + ms(30)).toISOString().slice(0, 10);
+    const renewalHorizon = jstToday(new Date(now.getTime() + ms(30)));
 
     // 全管理ページのレイアウトで呼ばれるため、DB側で対象行を絞って取得する。
     const [leadsRes, toursRes, actsRes, contractsRes] = await Promise.all([
@@ -785,7 +804,8 @@ export async function getArticles(): Promise<Article[]> {
     const { data } = await supabase
       .from("articles")
       .select("*")
-      .order("updated_at", { ascending: false });
+      .order("updated_at", { ascending: false })
+      .limit(300);
     return (data as Article[]) ?? [];
   }, []);
 }

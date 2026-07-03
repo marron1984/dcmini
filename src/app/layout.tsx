@@ -31,11 +31,13 @@ export const metadata: Metadata = {
     locale: "ja_JP",
     siteName: SITE_NAME,
     url: SITE_URL,
+    images: ["/images/consult-couple.png"],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
+    images: ["/images/consult-couple.png"],
   },
   robots: {
     index: true,
@@ -54,6 +56,10 @@ export default async function RootLayout({
   return (
     <html lang="ja">
       <body>
+        {/* JS無効環境でも Reveal ラッパー内のコンテンツを隠さない */}
+        <noscript>
+          <style>{`.js-reveal{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
         {/* 全ページ共通の構造化データ（運営者・サイト・地域ビジネス） */}
         <JsonLd data={organizationLd()} />
         <JsonLd data={websiteLd()} />

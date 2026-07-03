@@ -48,6 +48,24 @@ export function formatYen(value?: number | null): string {
   return `¥${value.toLocaleString("ja-JP")}`;
 }
 
+// ---- 日本時間(JST)基準の日付境界 ----
+// サーバーはUTCで動くため、素朴な new Date() ベースの日付演算は
+// 日本の業務日と最大9時間ズレる。集計・通知の判定はこちらを使う。
+const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+// JSTでの「今日」の日付文字列（YYYY-MM-DD）
+export function jstToday(now: Date = new Date()): string {
+  return new Date(now.getTime() + JST_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+// JSTでの「今月1日 0:00」に相当するUTC時刻
+export function jstStartOfMonth(now: Date = new Date()): Date {
+  const jst = new Date(now.getTime() + JST_OFFSET_MS);
+  return new Date(
+    Date.UTC(jst.getUTCFullYear(), jst.getUTCMonth(), 1) - JST_OFFSET_MS
+  );
+}
+
 export function relativeTime(value?: string | null): string {
   if (!value) return "—";
   const d = new Date(value).getTime();

@@ -1,11 +1,32 @@
 "use server";
 
+import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseLooseInt } from "@/lib/utils";
 
 export interface ContactFormResult {
   ok: boolean;
   error?: string;
+}
+
+// 簡易レート制限（IPごと固定窓・インスタンス内メモリ）。
+// サーバーレスではインスタンス毎に独立するため完全ではないが、
+// 単一IPからの連投・フォームスパムの大半を外部依存なしで抑止できる。
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 5;
+const rateMap = new Map<string, { count: number; windowStart: number }>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateMap.get(ip);
+  if (!entry || now - entry.windowStart > RATE_WINDOW_MS) {
+    // 窓の開始と同時に古いエントリを軽く掃除（肥大化防止）
+    if (rateMap.size > 5000) rateMap.clear();
+    rateMap.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > RATE_MAX;
 }
 
 // 9. 問い合わせフォーム → CRMに新規案件として自動登録
@@ -15,6 +36,17 @@ export async function submitContact(
   // ハニーポット（フォームスパム対策・32）
   if ((formData.get("company") as string)?.length) {
     return { ok: true }; // botには成功を返して静かに破棄
+  }
+
+  // レート制限（同一IPからの連投を抑止）
+  const ip =
+    headers().get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (isRateLimited(ip)) {
+    return {
+      ok: false,
+      error:
+        "送信回数が多すぎます。しばらく待ってから再度お試しいただくか、お電話でご相談ください。",
+    };
   }
 
   const consultantName = (formData.get("consultant_name") as string)?.trim();

@@ -18,8 +18,10 @@ export default async function LeadsPage({
 }: {
   searchParams: { [key: string]: string | undefined };
 }) {
-  const { ok } = await checkSectionAccess("leads");
+  const { ok, user } = await checkSectionAccess("leads");
   if (!ok) return <ForbiddenCard />;
+  // CSV出力・カンバン操作は admin / consultant のみ（viewerは閲覧のみ）
+  const canEdit = user != null && ["admin", "consultant"].includes(user.role);
 
   const view = searchParams.view === "kanban" ? "kanban" : "table";
   const filters: LeadFilters = {
@@ -50,14 +52,16 @@ export default async function LeadsPage({
         description={`${leads.length}件の入居相談`}
         action={
           <div className="flex items-center gap-2">
-            <a
-              href={`/admin/leads/export?${new URLSearchParams(
-                Object.entries(searchParams).filter(([, v]) => v) as [string, string][]
-              ).toString()}`}
-              className="flex h-9 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-ink-soft hover:bg-slate-50"
-            >
-              <Download className="h-4 w-4" /> CSV
-            </a>
+            {canEdit && (
+              <a
+                href={`/admin/leads/export?${new URLSearchParams(
+                  Object.entries(searchParams).filter(([, v]) => v) as [string, string][]
+                ).toString()}`}
+                className="flex h-9 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-ink-soft hover:bg-slate-50"
+              >
+                <Download className="h-4 w-4" /> CSV
+              </a>
+            )}
             <div className="flex rounded-xl border border-slate-300 bg-white p-1">
               <Link
                 href={buildHref({ view: "table" })}
@@ -148,7 +152,7 @@ export default async function LeadsPage({
       ) : view === "table" ? (
         <LeadsTable leads={leads} />
       ) : (
-        <LeadsKanban leads={leads} />
+        <LeadsKanban leads={leads} canEdit={canEdit} />
       )}
     </>
   );

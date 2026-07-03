@@ -20,13 +20,17 @@ export function StatusAssignBar({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
   function onStatus(e: React.ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value as LeadStatus;
     startTransition(async () => {
       const res = await updateLeadStatus(leadId, value);
-      setMsg(res.ok ? "ステータスを更新しました" : res.error ?? "更新に失敗しました");
+      setMsg(
+        res.ok
+          ? { text: "ステータスを更新しました", ok: true }
+          : { text: res.error ?? "更新に失敗しました", ok: false }
+      );
       if (res.ok) router.refresh();
     });
   }
@@ -35,7 +39,11 @@ export function StatusAssignBar({
     const value = e.target.value || null;
     startTransition(async () => {
       const res = await assignLead(leadId, value);
-      setMsg(res.ok ? "担当者を更新しました" : res.error ?? "更新に失敗しました");
+      setMsg(
+        res.ok
+          ? { text: "担当者を更新しました", ok: true }
+          : { text: res.error ?? "更新に失敗しました", ok: false }
+      );
     });
   }
 
@@ -59,7 +67,12 @@ export function StatusAssignBar({
         </Select>
       </label>
       {msg && (
-        <p role="status" className="pb-2.5 text-xs font-semibold text-emerald-600">{msg}</p>
+        <p
+          role="status"
+          className={`pb-2.5 text-xs font-semibold ${msg.ok ? "text-emerald-600" : "text-red-600"}`}
+        >
+          {msg.text}
+        </p>
       )}
     </div>
   );

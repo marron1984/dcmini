@@ -13,7 +13,7 @@ const COLUMNS: LeadStatus[] = [...KANBAN_STATUSES, "lost", "on_hold"];
 
 // ドラッグ&ドロップでステータスを変更できるカンバン。
 // 楽観更新で即座に移動し、サーバー側で失敗したら元の列に戻す。
-export function LeadsKanban({ leads }: { leads: Lead[] }) {
+export function LeadsKanban({ leads, canEdit = true }: { leads: Lead[]; canEdit?: boolean }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   // 楽観更新の上書きステータス（lead.id → status）
@@ -59,7 +59,9 @@ export function LeadsKanban({ leads }: { leads: Lead[] }) {
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <p className="text-xs text-ink-muted">
-          カードをドラッグすると、ステータスを変更できます。
+          {canEdit
+            ? "カードをドラッグすると、ステータスを変更できます。"
+            : "閲覧のみ（ステータス変更の権限がありません）。"}
         </p>
         {error && (
           <p role="alert" className="text-xs font-semibold text-red-600">
@@ -84,6 +86,7 @@ export function LeadsKanban({ leads }: { leads: Lead[] }) {
               </div>
               <div
                 onDragOver={(e) => {
+                  if (!canEdit) return;
                   e.preventDefault();
                   e.dataTransfer.dropEffect = "move";
                   if (dropCol !== status) setDropCol(status);
@@ -94,7 +97,7 @@ export function LeadsKanban({ leads }: { leads: Lead[] }) {
                     setDropCol(null);
                   }
                 }}
-                onDrop={(e) => handleDrop(e, status)}
+                onDrop={(e) => canEdit && handleDrop(e, status)}
                 className={cn(
                   "min-h-[120px] space-y-2 rounded-2xl p-2 transition-colors duration-150",
                   isTarget
@@ -106,8 +109,9 @@ export function LeadsKanban({ leads }: { leads: Lead[] }) {
                   <Link
                     key={l.id}
                     href={`/admin/leads/${l.id}`}
-                    draggable
+                    draggable={canEdit}
                     onDragStart={(e) => {
+                      if (!canEdit) return;
                       e.dataTransfer.effectAllowed = "move";
                       e.dataTransfer.setData("text/plain", l.id);
                       setDragId(l.id);

@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import { Input, Select, Field } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RoomStatusSelect } from "@/components/admin/RoomStatusSelect";
-import { ROOM_STATUSES } from "@/lib/constants";
+import { ROOM_STATUSES, ROOM_STATUS_MAP } from "@/lib/constants";
 import { upsertRoom } from "@/app/admin/actions";
 import { formatYen } from "@/lib/utils";
 import type { Room } from "@/lib/types";
@@ -13,9 +13,11 @@ import type { Room } from "@/lib/types";
 export function RoomManager({
   facilityId,
   rooms,
+  canEdit = true,
 }: {
   facilityId: string;
   rooms: Room[];
+  canEdit?: boolean;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
@@ -45,9 +47,11 @@ export function RoomManager({
         <p className="text-sm text-ink-muted">
           全{rooms.length}室 / 空室 {rooms.filter((r) => r.status === "vacant").length}室
         </p>
-        <Button size="sm" variant={open ? "outline" : "primary"} onClick={() => setOpen(!open)}>
-          <Plus className="h-4 w-4" />部屋を追加
-        </Button>
+        {canEdit && (
+          <Button size="sm" variant={open ? "outline" : "primary"} onClick={() => setOpen(!open)}>
+            <Plus className="h-4 w-4" />部屋を追加
+          </Button>
+        )}
       </div>
 
       {open && (
@@ -95,7 +99,15 @@ export function RoomManager({
                   <td className="px-4 py-2.5 font-semibold text-ink">{r.room_number}</td>
                   <td className="px-4 py-2.5 text-ink-soft">{r.floor ? `${r.floor}F` : "—"}</td>
                   <td className="px-4 py-2.5 text-ink-soft">{formatYen(r.rent)}</td>
-                  <td className="px-4 py-2.5"><RoomStatusSelect roomId={r.id} status={r.status} /></td>
+                  <td className="px-4 py-2.5">
+                    {canEdit ? (
+                      <RoomStatusSelect roomId={r.id} status={r.status} />
+                    ) : (
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${ROOM_STATUS_MAP[r.status]?.color ?? ""}`}>
+                        {ROOM_STATUS_MAP[r.status]?.label ?? r.status}
+                      </span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

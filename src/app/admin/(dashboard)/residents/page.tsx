@@ -20,8 +20,9 @@ export default async function ResidentsPage({
 }: {
   searchParams: { [key: string]: string | undefined };
 }) {
-  const { ok } = await checkSectionAccess("residents");
+  const { ok, user } = await checkSectionAccess("residents");
   if (!ok) return <ForbiddenCard />;
+  const canEdit = user != null && ["admin", "consultant"].includes(user.role);
 
   const filters: ResidentFilters = {
     q: searchParams.q,
@@ -45,9 +46,11 @@ export default async function ResidentsPage({
         title="入居者管理"
         description={`${residents.length}件の入居者`}
         action={
-          <Link href="/admin/residents/new">
-            <Button size="sm"><Plus className="h-4 w-4" />入居者を追加</Button>
-          </Link>
+          canEdit ? (
+            <Link href="/admin/residents/new">
+              <Button size="sm"><Plus className="h-4 w-4" />入居者を追加</Button>
+            </Link>
+          ) : undefined
         }
       />
 
